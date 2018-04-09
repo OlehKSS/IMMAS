@@ -4,4 +4,6 @@
 
 .vscode
 
+immas.egg-info
+
 **/__pycache__/**
