@@ -9,23 +9,23 @@ Repository for Advanced Image Analysis project.
 
  ## Installing and testing
 Create a virtual environment with the name `immas`
-```
+```bash
 conda create --name immas python=3
 ```
 
 Activate the created environment via 
-```
+```bash
 source activate immas
 ```
 Then run ``python setup.py develop`` for development purposes or ``python setup.py install`` if you want to do installation.
 
 The environment can be deactivated with the following command
-```
+```bash
 source deactivate immas
 ```
 
 If you want to test IMMAS with Jupyter-Notebook from your virtual environment you should add new kernel using these commands
-```
+```bash
 source activate immas
 
 conda install ipykernel
