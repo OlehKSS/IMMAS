@@ -10,7 +10,7 @@ Repository for Advanced Image Analysis project.
  ## Installing and testing
 Create a virtual environment with the name `immas`
 ```
-conda create -name immas python=3
+conda create --name immas python=3
 ```
 
 Activate the created environment via 
