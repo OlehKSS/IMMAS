@@ -1,9 +1,12 @@
-#ignore
 .DS_Store
 **/.DS_Store
 
 .vscode
 
-immas.egg-info
-
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/**
 **/__pycache__/**
+
+immas.egg-info
+dist
+build
