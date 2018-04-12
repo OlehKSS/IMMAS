@@ -1,13 +1,25 @@
 import cv2
-from mammogram import MammogramImage
+from immas.io import read_dataset
 
-path_image = "/home/okozyn/Projects/AIA-2018/dataset/images/20587080_b6a4f750c6df4f90_MG_R_ML_ANON.tif"
-path_mask = "/home/okozyn/Projects/AIA-2018/dataset/masks/20587080_b6a4f750c6df4f90_MG_R_ML_ANON.mask.png"
-pectoral_muscle = "/home/okozyn/Projects/AIA-2018/dataset/pectoral_muscle_masks/20587080_b6a4f750c6df4f90_MG_R_ML_ANON.tif"
-mm = MammogramImage(path_image, path_mask, pmuscle_mask_path=pectoral_muscle)
+# I will probably need original uncropped image for later comparison with ground truth, or masks
+data_set = read_dataset(image_folder="/home/okozyn/Projects/AIA-2018/dataset/images",
+            mask_folder="/home/okozyn/Projects/AIA-2018/dataset/masks",
+            results_folder="/home/okozyn/Projects/AIA-2018/dataset/groundtruth",
+            pmuscle_mask_folder="/home/okozyn/Projects/AIA-2018/dataset/pectoral_muscle_masks")
 
-cv2.namedWindow("pectoral", cv2.WINDOW_NORMAL)
-cv2.imshow("pectoral", mm.image_data)
+print(len(data_set))
+
+img = data_set[4]
+img.read_data()
+
+print(img.uncropped_image.shape)
+
+# cv2.namedWindow("data", cv2.WINDOW_NORMAL)
+# cv2.imshow("data", img.image_data)
+# cv2.waitKey(0)
+
+cv2.namedWindow("uncropped data", cv2.WINDOW_NORMAL)
+cv2.imshow("uncropped data", img.uncropped_image)
 cv2.waitKey(0)
 
 def test():

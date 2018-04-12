@@ -1,6 +1,52 @@
 import os, sys
+from .mammogram import MammogramImage
 
-def get_images_list(path='./dataset', file_extentions=[".tiff"]):
+def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder):
+    '''
+    Reads dataset and returns list of mammogram images found.
+        
+    Args:
+        image_folder (str): path to the images.
+        mask_folder (str): path to the mask for the images.        
+        results_folder (str): path to the corectly segmented images.
+        pmuscle_mask_folder (str): path to the pectoral muscle masks.
+
+    Returns:
+        ([MammogramImage]): list of mammogram images found. 
+    '''
+
+    mask_extenstions = [".png"]
+    mammogram_images = []
+
+    print("Reading list of files...")
+    
+    images = get_images(image_folder)
+    masks = get_images(mask_folder, mask_extenstions)
+    results = get_images(results_folder)
+    pmuscle_mask = get_images(pmuscle_mask_folder)
+
+    print("Reading mamograms images and all additional data...")
+
+    perc_read = 1
+
+    for exam_name in images:
+        temp_new_mm_img = MammogramImage(image_path=images[exam_name],
+                                        mask_path=masks[exam_name],
+                                        ground_truth_path=results.get(exam_name),
+                                        pmuscle_mask_path=pmuscle_mask.get(exam_name),
+                                        load_data=False)
+        mammogram_images.append(temp_new_mm_img)
+
+        temp_perc_read = round(len(mammogram_images)/len(images) * 100)
+
+        if temp_perc_read/perc_read > 1:
+            perc_read = temp_perc_read
+            print("{0}% of the dataset are read".format(perc_read))
+
+    return mammogram_images    
+
+
+def get_images(path="./dataset", file_extentions=[".tif"]):
     '''
     Function for finding all images in the specified folder.
 
@@ -9,11 +55,11 @@ def get_images_list(path='./dataset', file_extentions=[".tiff"]):
         file_extentions ([str]): list of file extentions to include
 
     Returns:
-        ([str], [str]): list of file names, list of the corresponding paths    
+        (dict(str, str)): dictionary of file names and corresponding paths    
     '''
 
-    file_names = []
-    file_paths = []
+    # dictionary instantiation
+    file_names_and_path = {}
 
     # we should have different processing for different projects in data set
 
@@ -21,7 +67,8 @@ def get_images_list(path='./dataset', file_extentions=[".tiff"]):
         for file_name in file_list:
             for file_ext in file_extentions:
                 if file_ext in file_name.lower():
-                    file_names.append(file_name)
-                    file_paths.append(os.path.join(dir_name, file_name))
+                    # save filename without extenstion (four last characters)
+                    file_names_and_path[file_name[:-4]] = os.path.join(dir_name, file_name)
 
-    return file_names, file_paths                
+    return file_names_and_path                
+
