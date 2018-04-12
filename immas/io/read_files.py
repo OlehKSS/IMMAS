@@ -25,9 +25,13 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
     results = get_images(results_folder)
     pmuscle_mask = get_images(pmuscle_mask_folder)
 
-    print("Reading mamograms images and all additional data...")
+    if not len(images):
+        raise RuntimeError("Could not find any image files.")
 
-    perc_read = 1
+    if not len(masks):
+        raise RuntimeError("Could not find any image mask files.")
+
+    print("Reading mamograms images and all additional data...")
 
     for exam_name in images:
         temp_new_mm_img = MammogramImage(image_path=images[exam_name],
@@ -36,12 +40,8 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
                                         pmuscle_mask_path=pmuscle_mask.get(exam_name),
                                         load_data=False)
         mammogram_images.append(temp_new_mm_img)
-
-        temp_perc_read = round(len(mammogram_images)/len(images) * 100)
-
-        if temp_perc_read/perc_read > 1:
-            perc_read = temp_perc_read
-            print("{0}% of the dataset are read".format(perc_read))
+    
+    print("All data have been successfully loaded.")
 
     return mammogram_images    
 

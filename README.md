@@ -32,4 +32,4 @@ conda install ipykernel
 
 python -m ipykernel install --user --name immas --display-name "Python 3 (IMMAS)"
 ```
-and select this kernel while running Jupyter-Notebook.
+and select this kernel while running Jupyter-Notebook. In order to delete jupyter-notebook kernel `immas` execute `jupyter-kernelspec uninstall immas`.
