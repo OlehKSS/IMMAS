@@ -7,6 +7,8 @@ Accuracy (ACC) is defined as:
     i.e., as the ratio between the number of correctly classified samples (in our case, pixels)
     and the total number of samples (pixels)
 
+# # # # # Images must be of unsigned type # # # # #
+
 Input:  segemented_images - segmentation results we want to evaluate (1 or more images, treated as binary)
         groundtruth_images - reference/manual/groundtruth segmentation images
         visual_results - false color images displaying the comparison between automated segmentation results and groundtruth
@@ -42,23 +44,27 @@ def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2)
 
             # Calculate accuracy as above
             segData = segmented_images + groundtruth_images
-            TP = (segData == numpy.amax(
-                  segData)).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
+            TP_value = numpy.amax(segmented_images)+numpy.amax(groundtruth_images)
+            TP = (segData == TP_value).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
             TN = (segData == 0).sum()  # found a true negative: segmentation result and groundtruth match(both are positive)
             N = (segData.shape[0] * segData.shape[1])
 
             # Find indicies of TN, TP, FN, FP
-            ind_TP = numpy.where(segData == numpy.amax(segData))
+            ind_TP = numpy.where(segData == TP_value)
             ind_TP = numpy.ravel_multi_index(ind_TP, (segmented_images.shape[0], segmented_images.shape[1]))
+
             ind_TN = numpy.where(segData == 0)
             ind_TN = numpy.ravel_multi_index(ind_TN, (segmented_images.shape[0], segmented_images.shape[1]))
 
-            segData_FP = 2 * segmented_images + groundtruth_images
-            segData_FN = segmented_images + 2 * groundtruth_images
-            ind_FP = numpy.where(segData_FP == 2 * numpy.amax(segmented_images))
+
+            segData_FP = 2. * segmented_images + groundtruth_images
+            segData_FN = segmented_images + 2. * groundtruth_images
+            ind_FP = numpy.where(segData_FP == numpy.amax(segData_FP))
             ind_FP = numpy.ravel_multi_index(ind_FP, (segmented_images.shape[0], segmented_images.shape[1]))
-            ind_FN = numpy.where(segData_FN == 2 * numpy.amax(groundtruth_images))
+
+            ind_FN = numpy.where(segData_FN == numpy.amax(segData_FN))
             ind_FN = numpy.ravel_multi_index(ind_FN, (segmented_images.shape[0], segmented_images.shape[1]))
+
 
             # TP: Mark with blue
             numpy.put(img[..., 2], ind_TP, 255)
@@ -69,8 +75,8 @@ def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2)
             numpy.put(img[..., 2], ind_TN, 128)
 
             # FP: Mark with yellow
-            numpy.put(img[..., 1], ind_FP, 255)
             numpy.put(img[..., 0], ind_FP, 255)
+            numpy.put(img[..., 1], ind_FP, 255)
 
             # FN: Mark with red
             numpy.put(img[..., 0], ind_FN, 255)
