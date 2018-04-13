@@ -33,8 +33,8 @@ def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2)
     if num_images == 1:
         if visual_results == "no":
             segData = segmented_images + groundtruth_images
-            TP = TP + (segData == numpy.amax(
-                    segData)).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
+            TP_value = numpy.amax(segmented_images) + numpy.amax(groundtruth_images)
+            TP = TP + (segData == TP_value).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
             TN = TN + (
                             segData == 0).sum()  # found a true negative: segmentation result and groundtruth match(both are positive)
             N = N + (segData.shape[0] * segData.shape[1])
@@ -52,19 +52,20 @@ def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2)
             # Find indicies of TN, TP, FN, FP
             ind_TP = numpy.where(segData == TP_value)
             ind_TP = numpy.ravel_multi_index(ind_TP, (segmented_images.shape[0], segmented_images.shape[1]))
-
+            print(len(ind_TP))
             ind_TN = numpy.where(segData == 0)
             ind_TN = numpy.ravel_multi_index(ind_TN, (segmented_images.shape[0], segmented_images.shape[1]))
-
+            print(len(ind_TN))
 
             segData_FP = 2. * segmented_images + groundtruth_images
             segData_FN = segmented_images + 2. * groundtruth_images
-            ind_FP = numpy.where(segData_FP == numpy.amax(segData_FP))
+            ind_FP = numpy.where(segData_FP == 2*numpy.amax(segmented_images))
             ind_FP = numpy.ravel_multi_index(ind_FP, (segmented_images.shape[0], segmented_images.shape[1]))
+            print(len(ind_FP))
 
-            ind_FN = numpy.where(segData_FN == numpy.amax(segData_FN))
+            ind_FN = numpy.where(segData_FN == 2*numpy.amax(groundtruth_images))
             ind_FN = numpy.ravel_multi_index(ind_FN, (segmented_images.shape[0], segmented_images.shape[1]))
-
+            print(len(ind_FN))
 
             # TP: Mark with blue
             numpy.put(img[..., 2], ind_TP, 255)
