@@ -19,6 +19,8 @@ class MammogramImage:
         self.image_data = None
         self.image_ground_truth = None
         self._image_mask = None
+        # rectangle that bound brest
+        self._bounding_rect = None
 
         self._image_path = image_path
         self._mask_path = mask_path
@@ -34,11 +36,24 @@ class MammogramImage:
 
         uncropped_image = self._image_mask.astype("uint16")
         
-        non_zero_pxls = cv2.findNonZero(self._image_mask)
-        x, y, w, h = cv2.boundingRect(non_zero_pxls)
+        x, y, w, h = self._bounding_rect.values()
         uncropped_image[y:y+h, x:x+w] = self.image_data
 
         return uncropped_image 
+
+    def restore_background(self):
+        '''
+        Method for clearing background of the cropped image. Can be used to discard
+        effects of the filters on the background.
+
+        Args: None.
+
+        Returns: None.
+        '''
+        
+        x, y, w, h = self._bounding_rect.values()
+        cropped_mask = self._image_mask[y:y+h, x:x+w]
+        self.image_data = self.image_data * cropped_mask
   
 
     def read_data(self):
@@ -77,6 +92,7 @@ class MammogramImage:
         self.image_data = image * mask
         non_zero_pxls = cv2.findNonZero(mask)
         x, y, w, h = cv2.boundingRect(non_zero_pxls)
+        self._bounding_rect = {"x": x, "y": y, "width": w, "height": h}
         self.image_data = self.image_data[y:y+h, x:x+w]
 
 
