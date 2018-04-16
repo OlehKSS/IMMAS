@@ -12,11 +12,12 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
         pmuscle_mask_folder (str): path to the pectoral muscle masks.
 
     Returns:
-        ([MammogramImage]): list of mammogram images found. 
+        {"train": [MammogramImage], "test": [MammogramImage]}: dictionary 
+        of lists with training and test mammogram images found. 
     '''
 
     mask_extenstions = [".png"]
-    mammogram_images = []
+    mammogram_images = {"train": [], "test": []}
 
     print("Reading list of files...")
     
@@ -34,12 +35,17 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
     print("Reading mamograms images and all additional data...")
 
     for exam_name in images:
+        # checking whether we have groundtruth or not in order to divide the dataset in train
+        # and test subsets
         temp_new_mm_img = MammogramImage(image_path=images[exam_name],
                                         mask_path=masks[exam_name],
                                         ground_truth_path=results.get(exam_name),
                                         pmuscle_mask_path=pmuscle_mask.get(exam_name),
                                         load_data=False)
-        mammogram_images.append(temp_new_mm_img)
+        if results.get(exam_name):
+            mammogram_images["train"].append(temp_new_mm_img)
+        else:
+            mammogram_images["test"].append(temp_new_mm_img)    
     
     print("All data have been successfully loaded.")
 
@@ -55,7 +61,7 @@ def get_images(path="./dataset", file_extentions=[".tif"]):
         file_extentions ([str]): list of file extentions to include
 
     Returns:
-        (dict(str, str)): dictionary of file names and corresponding paths    
+        dict(str, str): dictionary of file names and corresponding paths    
     '''
 
     # dictionary instantiation
