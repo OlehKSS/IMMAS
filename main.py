@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-PATH = '../dataset/images/'
-MASK = '../dataset/masks/'
+PATH = './dataset/images/'
+MASK = './dataset/masks/'
 image_name='50993841_de5e8d61e501a71b_MG_L_CC_ANON.tif'
 image_mask='50993841_de5e8d61e501a71b_MG_L_CC_ANON.mask.png'
 
@@ -12,11 +12,22 @@ def resize(image):
 	small = cv2.resize(image, (0,0), fx=0.2, fy=0.2)
 	return small
 
-def CLAHE(image,grid):
+def clahe (image, CLAHE_CLIP=10.0 , CLAHE_GRID = 8):
 
-	clahe = cv2.createCLAHE(clipLimit=8.0, tileGridSize=(grid,grid))
-	image_out = clahe.apply(image)
-	return image_out
+    '''
+    Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
+    Local details are enhanced even in regions that are darker or lighter than most of the image.
+        
+    Args:
+        img (uint8): image file.
+        clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
+        grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
+
+    Returns:
+         image obtained after CLAHE application. 
+    '''
+    clahe = cv2.createCLAHE( CLAHE_CLIP, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
+    return clahe.apply(image)
 
 
 if __name__== "__main__":
@@ -34,7 +45,7 @@ if __name__== "__main__":
 
 
 	#apply contrast enhacement
-	contrasted = CLAHE(im,8);
+	contrasted = clahe(im,20,8);
 	cv2.imshow('Improved_image(CLAHE)',contrasted) 
 
 
