@@ -32,13 +32,13 @@ def close(image):
 def erode(image):
 	return cv2.morphologyEx(image, cv2.MORPH_ERODE, KERNEL)
 
-def dilate(image)
-	return cv2.morphologyEx(image, cv2.MORPH_DILATE KERNEL)
+def dilate(image):
+    return cv2.morphologyEx(image, cv2.MORPH_DILATE, KERNEL)
 
 def clahe (img, clip=10.0, grid=(8,8)):
     clahe = cv2.createCLAHE(CLAHE_CLIP,CLAHE_GRID)
     return clahe.apply(img)
-=======
+
 def clahe (img, clip=10.0, grid=(8,8)):
     '''
     Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
