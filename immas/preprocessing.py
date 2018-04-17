@@ -2,38 +2,81 @@ import numpy as np
 import cv2
 
 
-# Contrast Limited Adaptive Histogram Equalization (CLAHE)
-# An algorithm for local contrast enhancement, that uses histograms computed over different tile regions of the image.
-# Local details can therefore be enhanced even in regions that are darker or lighter than most of the image.
-# Inputs:
-# img - image
-# clip - If any histogram bin is above the specified contrast limit (by default 40 in OpenCV), those pixels are clipped and distributed uniformly to other bins before applying histogram equalization
-# grid - size of the block of the image where histogram equalization is going to be performed
-# Output:
-# new_img - image obtained after CLAHE use
+def resize(image, fx, fy):
+    
+    '''
+    Resizes the image down to or up to the specified size. 
+    Args:
+        img (uint16): image file.
+        fx (float): (default = 0.2)scale factor along the horizontal axis;        
+        fy (float): (default = 0.2)scale factor along the vertical axis;
 
-#global parameters
-CLAHE_GRID = 8;
-CLAHE_CLIP = 20;
+    Returns:
+        image obtained after resizing . 
+    '''
+    return cv2.resize(image, (0,0), fx=0.2, fy=0.2)
+	
 
-KERNEL = np.ones((10,10),np.uint8)
+def open(image, kernel_size = (10,10)):
+    
+    '''
+    Performs a morphological transformations with OPENING operation.
+    Args:
+        img (uint16): image file.
+        kernel_size (tuple): size of the kernel to be used (default = (10,10)) 
 
+    Returns:
+        image obtained after opening. 
+    '''
+    KERNEL = np.ones(kernel_size, np.uint8)
+    return cv2.morphologyEx(image, cv2.MORPH_OPEN, KERNEL)
+    
 
-def resize(image):
-	small = cv2.resize(image, (0,0), fx=0.2, fy=0.2)
-	return small
+def close(image,  kernel_size = (10,10)):
 
-def open(image):
-	return cv2.morphologyEx(image, cv2.MORPH_OPEN, KERNEL)
+    '''
+    Performs a morphological transformations with CLOSE operation.
+    Args:
+        img (uint16): image file.
+        kernel_size (tuple): size of the kernel to be used (default = (10,10)) 
 
-def close(image):
-	return cv2.morphologyEx(image, cv2.MORPH_CLOSE, KERNEL)
+    Returns:
+        image obtained after opening. 
 
-def erode(image):
-	return cv2.morphologyEx(image, cv2.MORPH_ERODE, KERNEL)
+    '''
+    KERNEL = np.ones(kernel_size,np.uint8)
+    return cv2.morphologyEx(image, cv2.MORPH_CLOSE, KERNEL)
 
-def dilate(image):
+def erode(image,  kernel_size = (10,10)):
+
+    '''
+    Performs a morphological transformations with EROSION operation.
+    Args:
+        img (uint16): image file.
+        kernel_size (tuple): size of the kernel to be used (default = (10,10)) 
+
+    Returns:
+        image obtained after opening. 
+
+    '''
+    KERNEL = np.ones(kernel_size,np.uint8)
+    return cv2.morphologyEx(image, cv2.MORPH_ERODE, KERNEL)
+
+def dilate(image,  kernel_size = (10,10)):
+
+    '''
+    Performs a morphological transformations with DILATION operation.
+    Args:
+        img (uint16): image file.
+        kernel_size (tuple): size of the kernel to be used (default = (10,10)) 
+
+    Returns:
+        image obtained after opening. 
+
+    '''
+    KERNEL = np.ones(kernel_size,np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_DILATE, KERNEL)
+    
 
 def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
 
@@ -42,7 +85,7 @@ def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
     Local details are enhanced even in regions that are darker or lighter than most of the image.
         
     Args:
-        img (uint8): image file.
+        img (uint16): image file.
         clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
         grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
 
