@@ -9,7 +9,7 @@ image_mask='50993841_de5e8d61e501a71b_MG_L_CC_ANON.mask.png'
 
 
 def resize(image):
-	small = cv2.resize(image, (0,0), fx=0.2, fy=0.2)
+	small = cv2.resize(image, (0,0), fx=0.25, fy=0.25)
 	return small
 
 def clahe (image, CLAHE_CLIP=10.0 , CLAHE_GRID = 8):
