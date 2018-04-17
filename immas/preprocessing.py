@@ -35,11 +35,8 @@ def erode(image):
 def dilate(image):
     return cv2.morphologyEx(image, cv2.MORPH_DILATE, KERNEL)
 
-def clahe (img, clip=10.0, grid=(8,8)):
-    clahe = cv2.createCLAHE(CLAHE_CLIP,CLAHE_GRID)
-    return clahe.apply(img)
+def clahe (image, CLAHE_CLIP , CLAHE_GRID = 8):
 
-def clahe (img, clip=10.0, grid=(8,8)):
     '''
     Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
     Local details are enhanced even in regions that are darker or lighter than most of the image.
@@ -50,10 +47,8 @@ def clahe (img, clip=10.0, grid=(8,8)):
         grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
 
     Returns:
-        (new_img): image obtained after CLAHE application. 
+         image obtained after CLAHE application. 
     '''
-
-    clahe = cv2.createCLAHE(clip,grid)
-    new_img = clahe.apply(img)
-    return new_img
-
+    clahe = cv2.createCLAHE( CLAHE_CLIP=10.0, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
+    return clahe.apply(image)
+ 
