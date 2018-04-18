@@ -17,7 +17,8 @@ class MammogramImage:
     def __init__(self, image_path, mask_path, ground_truth_path=None, pmuscle_mask_path=None,
                  load_data=True):      
         self.image_data = None
-        self.image_ground_truth = None
+
+        self._image_ground_truth = None
         self._image_mask = None
         # rectangle that bound brest
         self._bounding_rect = None
@@ -29,6 +30,24 @@ class MammogramImage:
 
         if load_data:
             self.read_data()
+
+
+    @property
+    def has_masses(self):
+        '''
+        Returns True if masses are present on the groundthruth  image, 
+        otherwise returns False.
+        '''
+        return True if self._ground_truth_path else False
+    
+    @property
+    def image_ground_truth(self):
+        '''Returns correct ground truth image'''
+        if self._ground_truth_path:
+            return self._image_ground_truth
+        else:
+            # generation of black image for images with no masses
+            return np.zeros(self._image_mask.shape, dtype='uint8')    
 
     @property
     def uncropped_image(self):
@@ -99,5 +118,5 @@ class MammogramImage:
     def _read_ground_truth(self, ground_truth_path):
         '''Reads and adds ground truth image to the object'''
   
-        self.image_ground_truth = cv2.imread(ground_truth_path)
+        self._image_ground_truth = cv2.imread(ground_truth_path)
         
