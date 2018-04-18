@@ -1,7 +1,10 @@
 import os, sys
+from random import shuffle
+from math import floor
 from .mammogram import MammogramImage
 
-def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder):
+def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder, 
+                 train_set_fraction=0.25):
     '''
     Reads dataset and returns list of mammogram images found.
         
@@ -10,6 +13,8 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
         mask_folder (str): path to the mask for the images.        
         results_folder (str): path to the corectly segmented images.
         pmuscle_mask_folder (str): path to the pectoral muscle masks.
+        train_set_fraction (float): fraction of the data to be used for training. 
+        Default is 25%.
 
     Returns:
         {"train": [MammogramImage], "test": [MammogramImage]}: dictionary 
@@ -17,7 +22,8 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
     '''
 
     mask_extenstions = [".png"]
-    mammogram_images = {"train": [], "test": []}
+    imgs_mass = []
+    imgs_clean = []
 
     print("Reading list of files...")
     
@@ -34,19 +40,34 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder)
 
     print("Reading mamograms images and all additional data...")
 
+    # checking whether we have groundtruth (mass) or not in order to divide the dataset
+    # into images with masses and without ones 
     for exam_name in images:
-        # checking whether we have groundtruth or not in order to divide the dataset in train
-        # and test subsets
         temp_new_mm_img = MammogramImage(image_path=images[exam_name],
                                         mask_path=masks[exam_name],
                                         ground_truth_path=results.get(exam_name),
                                         pmuscle_mask_path=pmuscle_mask.get(exam_name),
                                         load_data=False)
         if results.get(exam_name):
-            mammogram_images["train"].append(temp_new_mm_img)
+            imgs_mass.append(temp_new_mm_img)
         else:
-            mammogram_images["test"].append(temp_new_mm_img)    
+            imgs_clean.append(temp_new_mm_img)   
     
+    # random partitioning and shuffling of the data into train and test dataset
+    train_imgs_mass_len = floor(train_set_fraction*len(imgs_mass)) + 1
+    train_imgs_clean_len = floor(train_set_fraction*len(imgs_clean)) + 1
+
+    shuffle(imgs_mass)
+    shuffle(imgs_clean)
+
+    train_imgs = imgs_mass[1:train_imgs_mass_len] + imgs_clean[1:train_imgs_clean_len]
+    test_imgs = imgs_mass[train_imgs_mass_len:] + imgs_clean[train_imgs_clean_len:]
+
+    shuffle(train_imgs)
+    shuffle(test_imgs)
+
+    mammogram_images = {"train": train_imgs, "test": test_imgs}
+
     print("All data have been successfully loaded.")
 
     return mammogram_images    
