@@ -1,9 +1,11 @@
 import numpy as np
 import cv2
 import math
+import pywt
+from scipy.ndimage.filters import median_filter
 
 
-def resize(image, fx, fy):
+def resize(image, fx = 0.25, fy = 0.25):
     
     '''
     Resizes the image down to or up to the specified size. 
@@ -15,7 +17,7 @@ def resize(image, fx, fy):
     Returns:
         image obtained after resizing . 
     '''
-    return cv2.resize(image, (0,0), fx=0.2, fy=0.2)
+    return cv2.resize(image, (0,0), fx, fy)
 	
 
 def open(image, kernel_size = (10,10)):
