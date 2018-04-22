@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 
 
 def resize(image, fx, fy):
@@ -95,3 +96,30 @@ def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
     clahe = cv2.createCLAHE( CLAHE_CLIP=10.0, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
     return clahe.apply(image)
  
+def waveletTransform (image,  kernel_size =5):
+    '''
+    Wavelet transform performs sigle level 2D wavelet transform followed by median filtering and reconstruction by inverse wavelet transform.
+
+    Args:
+        img (uint16): image file.
+        kernel : size of kernel used for median filter(default = 5)
+
+    Returns:
+         image obtained after inverse transfrom of filtered image details.
+
+    The dwt2() function performs single level 2D Discrete Wavelet Transform.
+    Parameters: 
+    data – img
+    wavelet – Wavelet to use in the transform. It defaultly uses "db4" also named as Daubechies 4
+    '''
+    coeffs2 = pywt.dwt2(image, 'db4')
+    LL, (LH, HL, HH) = coeffs2
+
+    LL = math.sqrt(2)*LL 
+    LH = median_filter(LH, kernel_size)
+    HL = median_filter(HL, kernel_size)
+    HH = median_filter(HH, kernel_size)
+    coeffs2 = LL, (LH, HL, HH) 
+
+    return pywt.idwt2(coeffs2, 'db4')
+
