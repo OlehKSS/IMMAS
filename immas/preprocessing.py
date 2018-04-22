@@ -96,31 +96,7 @@ def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
     clahe = cv2.createCLAHE( CLAHE_CLIP=10.0, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
     return clahe.apply(image)
 
-def morphoEnhancement(image, kernel_size = 20):
-    
-    '''
-    Top hat approach for morphological enhancement
-    
-    Args:
-        image (uint16):     image file
-        kernel_size (float):size of kernel for morphological operations, by 
-        default 20x20
-        
-    Returns:
-        image enhanced 
-        
-    It is possible to add the bright areas (top hat) to the image and subtract
-    the dark areas (bottom hat) from it. As a result, there will be an enhancement 
-    in the contrast between bright and dark areas. To improve the contrast even 
-    more clahe is applied
-    '''
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
-    tophat = cv2.morphologyEx(image, cv2.MORPH_TOPHAT, kernel)
-    bothat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, kernel)
-    enhanced = image + tophat - bothat
-    
-    final = clahe(enhanced, 2.0)
-    return final
+
  
 def waveletTransform (image,  kernel_size =5):
     '''
@@ -149,3 +125,28 @@ def waveletTransform (image,  kernel_size =5):
 
     return pywt.idwt2(coeffs2, 'db4')
 
+def morphoEnhancement(image, kernel_size = 20):
+    
+    '''
+    Top hat approach for morphological enhancement
+    
+    Args:
+        image (uint16):     image file
+        kernel_size (float):size of kernel for morphological operations, by 
+        default 20x20
+        
+    Returns:
+        image enhanced 
+        
+    It is possible to add the bright areas (top hat) to the image and subtract
+    the dark areas (bottom hat) from it. As a result, there will be an enhancement 
+    in the contrast between bright and dark areas. To improve the contrast even 
+    more clahe is applied
+    '''
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
+    tophat = cv2.morphologyEx(image, cv2.MORPH_TOPHAT, kernel)
+    bothat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, kernel)
+    enhanced = image + tophat - bothat
+    
+    final = clahe(enhanced, 2.0)
+    return final
