@@ -97,8 +97,6 @@ def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
     '''
     clahe = cv2.createCLAHE( CLAHE_CLIP=10.0, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
     return clahe.apply(image)
-
-
  
 def waveletTransform (image,  kernel_size =5):
     '''
@@ -152,3 +150,20 @@ def morphoEnhancement(image, kernel_size = 20):
     
     final = clahe(enhanced, 2.0)
     return final
+
+def fullPreprocessing (img):
+    '''
+    Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
+    Local details are enhanced even in regions that are darker or lighter than most of the image.
+        
+    Args:
+        img (uint8): image file.
+        clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
+        grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
+
+    Returns:
+        (new_img): image obtained after CLAHE application. 
+    '''
+
+    new_img = clahe(img)
+    return new_img
