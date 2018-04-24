@@ -73,10 +73,10 @@ def multithresholding(img):
                 optimalThresh1 = t1
                 optimalThresh2 = t2
 
-binary1 = (img > optimalThresh1)/255
-binary2 = (img > optimalThresh2)/255
-thresholded_img = binary1 * int(255/3) + binary2 * int(2*255/3)
-return thresholded_img
+    binary1 = (img > optimalThresh1)/255
+    binary2 = (img > optimalThresh2)/255
+    thresholded_img = binary1 * int(255/3) + binary2 * int(2*255/3)
+    return thresholded_img
 
 def mean_shift_image(img,sp,sr):
     '''
@@ -89,7 +89,7 @@ def mean_shift_image(img,sp,sr):
         
         Returns:
         shifted_img (uint8,3-channel): shifted image file.
-        '''
+    '''
     shifted_img = cv2.pyrMeanShiftFiltering(img, sp,sr)
     
     return shifted_img
