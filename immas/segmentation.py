@@ -1,4 +1,4 @@
-import cv2, numpy
+import cv2, numpy, sys
 
 def multithresholding(img):
     '''
@@ -16,9 +16,7 @@ def multithresholding(img):
                          "Error in multithresholding(): image is a color image. Image must be grayscale")
         sys.exit()
     if (numpy.amax(img) > 256):
-        raise ValueError(
-                         "Error in multithresholding(): image is not 8 bit")
-        sys.exit()
+        img = (img/ 256).astype('uint8')
 
     # Compute histogram
     bins, bins_c = numpy.histogram(img, 256)
@@ -70,7 +68,7 @@ def multithresholding(img):
     thresholded_img = binary1 * int(255/3) + binary2 * int(2*255/3)
     return thresholded_img
 
-def mean_shift_image(img,sp,sr):
+def mean_shift(img,sp,sr):
     '''
         Performs mean shifting to aid segmentation.
         
