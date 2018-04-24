@@ -17,8 +17,8 @@ def resize(image, fx=0.25, fy=0.25):
     Returns:
         image obtained after resizing . 
     '''
-    return cv2.resize(image, (0,0),  fx=fx, fy=fy)
-
+    return cv2.resize(image, (0,0), fx=fx, fy=fy)
+	
 
 def open(image, kernel_size = (10,10)):
     
@@ -81,7 +81,7 @@ def dilate(image,  kernel_size = (10,10)):
     return cv2.morphologyEx(image, cv2.MORPH_DILATE, KERNEL)
     
 
-def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
+def clahe (image, clip=10.0, grid=8):
 
     '''
     Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
@@ -95,8 +95,8 @@ def clahe (image, CLAHE_CLIP=10, CLAHE_GRID = 8):
     Returns:
          image obtained after CLAHE application. 
     '''
-    clahe = cv2.createCLAHE( CLAHE_CLIP=10.0, tileGridSize=(CLAHE_GRID,CLAHE_GRID))
-    return clahe.apply(image)
+    myclahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(grid,grid))
+    return myclahe.apply(image)
  
 def waveletTransform (image,  kernel_size =5):
     '''
@@ -165,5 +165,6 @@ def fullPreprocessing (img):
         (new_img): image obtained after CLAHE application. 
     '''
 
-    new_img = clahe(img)
+    new_img = morphoEnhancement(img)
+    new_img = waveletTransform(img)
     return new_img
