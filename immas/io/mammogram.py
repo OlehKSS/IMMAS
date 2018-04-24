@@ -12,11 +12,13 @@ class MammogramImage:
         pmuscle_mask_path (str): path to the pectoral muscle mask.
         load_data (bool): if True images data will be loaded during object instantiation, 
             otherwise you should trigger data reading manually.
+        file_name (str): name of the mammogram file without its extension.
     '''
 
     def __init__(self, image_path, mask_path, ground_truth_path=None, pmuscle_mask_path=None,
-                 load_data=True):      
+                 load_data=True, file_name=None):      
         self.image_data = None
+        self.file_name = file_name
 
         self._image_ground_truth = None
         self._image_mask = None
