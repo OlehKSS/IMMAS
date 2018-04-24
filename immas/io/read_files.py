@@ -47,7 +47,8 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder,
                                         mask_path=masks[exam_name],
                                         ground_truth_path=results.get(exam_name),
                                         pmuscle_mask_path=pmuscle_mask.get(exam_name),
-                                        load_data=False)
+                                        load_data=False,
+                                        file_name=exam_name)
         if results.get(exam_name):
             imgs_mass.append(temp_new_mm_img)
         else:
