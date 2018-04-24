@@ -63,7 +63,7 @@ def multithresholding(img):
                 if maxBetweenVar < currVarB:
                     maxBetweenVar = currVarB
                     optimalThresh1 = t1
-                        optimalThresh2 = t2
+                    optimalThresh2 = t2
 
     binary1 = (img > optimalThresh1)/255
     binary2 = (img > optimalThresh2)/255
