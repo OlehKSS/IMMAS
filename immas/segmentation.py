@@ -96,5 +96,5 @@ def mean_shift(img,sp,sr):
     return shifted_img_gray
 
 def thresh_to_binary(img):
-    binary_img = (img > 200) * 255
+    binary_img = ((img > 200) * 255).astype('uint8')
     return binary_img
