@@ -65,7 +65,7 @@ def multithresholding(img):
 
     binary1 = (img > optimalThresh1)
     binary2 = (img > optimalThresh2)
-    thresholded_img = (binary1 * int(255/3) + binary2 * int(2*255/3))
+    thresholded_img = (binary1 * int(255/3) + binary2 * int(2*255/3)).astype('uint8')
     return thresholded_img
 
 def mean_shift(img,sp,sr):
