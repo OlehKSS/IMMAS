@@ -14,7 +14,6 @@ Input:  segemented_images - segmentation results we want to evaluate (1 or more 
         visual_results - false color images displaying the comparison between automated segmentation results and groundtruth
                          True positives = blue, True negatives = gray, False positives = yellow, False negatives = red,
                          in format "yes" or "no"
-        num_images - put 1 if one image, otherwise leave blank
 
 Output: accuracy - average accuracy over all given images
 """
@@ -22,7 +21,7 @@ import sys
 import numpy
 import matplotlib.pyplot as plt
 
-def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2):
+def accuracy(segmented_images, groundtruth_images, visual_results):
 
     # True positives (TP), True negatives (TN), and total number N of pixels are all we need
     TP = 0
@@ -30,7 +29,7 @@ def accuracy(segmented_images, groundtruth_images, visual_results, num_images=2)
     N = 0
 
     #Settings for one image
-    if num_images == 1:
+     if (len(numpy.shape(segmented_images)) == 2):
         if visual_results == "no":
             segData = segmented_images + groundtruth_images
             TP_value = numpy.amax(segmented_images) + numpy.amax(groundtruth_images)
