@@ -29,7 +29,7 @@ def accuracy(segmented_images, groundtruth_images, visual_results):
     N = 0
 
     #Settings for one image
-     if (len(numpy.shape(segmented_images)) == 2):
+    if (len(numpy.shape(segmented_images)) == 2):
         if visual_results == "no":
             segData = segmented_images + groundtruth_images
             TP_value = numpy.amax(segmented_images) + numpy.amax(groundtruth_images)
