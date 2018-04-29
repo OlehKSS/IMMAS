@@ -3,10 +3,9 @@ import numpy as np
 from pandas import DataFrame
 from pandas import concat
 
+from .binarization import get_candidates_mask
 from .geometry import get_geom_features
 from .intensity import get_itensity_features
-from ..segmentation import multithresholding
-from ..preprocessing import clahe
 
 def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
     '''
@@ -24,16 +23,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
         and list of contours.   
     '''
 
-    img_clahe = clahe(img)
-    img_thresh = multithresholding(img_clahe)
-    # converting to uint8
-    img_thresh = (255*img_thresh).astype(dtype='uint8')
-    # seems to be redundant after previous steps
-    _, img_thresh = cv2.threshold(img_thresh, 0, 1, cv2.THRESH_BINARY)
-
-    # cv2.namedWindow("test", cv2.WINDOW_NORMAL)
-    # cv2.imshow("test", img_thresh)
-    # cv2.waitKey(0)
+    img_thresh = get_candidates_mask(img)
 
     number_of_masses = 0
 
@@ -92,7 +82,10 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
                 # since we work here with false positives
                 arr_features[contour_max_number + index, -1] = 1
 
-    return (DataFrame(arr_features, columns=features_names), contours + mass_contours)
+        # add groundtruth contours to the output as well
+        contours = contours + mass_contours        
+
+    return (DataFrame(arr_features, columns=features_names), contours)
 
 
 def get_dataset_features(data):
