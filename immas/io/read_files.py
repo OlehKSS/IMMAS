@@ -1,6 +1,7 @@
 import os, sys
 from random import shuffle
 from math import floor
+
 from .mammogram import MammogramImage
 
 def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder, 
@@ -98,5 +99,4 @@ def get_images(path="./dataset", file_extentions=[".tif"]):
                     # save filename without extenstion (four last characters)
                     file_names_and_path[file_name[:-4]] = os.path.join(dir_name, file_name)
 
-    return file_names_and_path                
-
+    return file_names_and_path
