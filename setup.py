@@ -8,5 +8,9 @@ setup(
    description='Intelligent Mammogram Mass Analysis and Segmentation',
    author='MAIA',
    packages=find_packages(),  # finds all the packages in the module
-   install_requires=['numpy', 'opencv-python'], # external packages as dependencies
+   install_requires=['numpy', 
+   'opencv-python', 
+   'PyWavelets', 
+   'scipy',
+   'pandas'], # external packages as dependencies
 )

@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+from ..features import get_img_features
+
 class MammogramImage:
     '''
     Class for storing information about mammogram image.
@@ -24,6 +26,9 @@ class MammogramImage:
         self._image_mask = None
         # rectangle that bound brest
         self._bounding_rect = None
+        # features and contours
+        self._contours = None
+        self._candidates_features = None
 
         self._image_path = image_path
         self._mask_path = mask_path
@@ -53,14 +58,42 @@ class MammogramImage:
 
     @property
     def uncropped_image(self):
-        '''Returns uncropped image'''
+        '''Returns uncropped image.'''
 
         uncropped_image = self._image_mask.astype("uint16")
         
         x, y, w, h = self._bounding_rect.values()
         uncropped_image[y:y+h, x:x+w] = self.image_data
 
-        return uncropped_image 
+        return uncropped_image
+
+    @property
+    def cropped_ground_truth(self):
+        '''Returns cropped ground truth image.'''
+        x, y, w, h = self._bounding_rect.values()
+
+        return self.image_ground_truth[y:y+h, x:x+w]
+
+    @property 
+    def contours(self):
+        '''Returns contours of mass candidates.''' 
+
+        if self._contours is None:
+            self.get_img_features()
+            return self._contours
+        else:
+            return self._contours
+
+    @property 
+    def candidates_features(self):
+        '''Returns data frame of features of mass candidates (contours).''' 
+
+        if self._candidates_features is None:
+            self.get_img_features()            
+            return self._candidates_features
+        else:
+            return self._candidates_features        
+                
 
     def restore_background(self):
         '''
@@ -91,7 +124,25 @@ class MammogramImage:
 
         if self._ground_truth_path and self._ground_truth_path.strip():
             self._read_ground_truth(self._ground_truth_path)
-          
+
+
+    def get_img_features(self, contour_max_number=10):
+        '''
+        Finds mass candidates contours and their features.
+
+        Args:
+            contour_max_number (int): maximum number of contours (without groundtruth) 
+            to take into account, default is 10.
+
+        Returns:
+            (pandas.DataFrame, [opencv.contour]): features of selected contours 
+            and list of contours.    
+        '''
+        f_c = get_img_features(self.image_data, self.cropped_ground_truth, contour_max_number)
+        self._candidates_features, self._contours = f_c
+
+        return f_c
+
 
     def _read_image(self, image_path, mask_path, pmuscle_mask_path=None):
         '''Reads image and applies mask to it.'''
@@ -120,5 +171,5 @@ class MammogramImage:
     def _read_ground_truth(self, ground_truth_path):
         '''Reads and adds ground truth image to the object'''
   
-        self._image_ground_truth = cv2.imread(ground_truth_path)
+        self._image_ground_truth = cv2.imread(ground_truth_path, cv2.IMREAD_GRAYSCALE)
         
