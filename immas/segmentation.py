@@ -1,4 +1,5 @@
 import cv2, numpy, sys
+from sklearn.metrics import jaccard_similarity_score
 
 def multithresholding(img):
     '''
@@ -98,3 +99,64 @@ def mean_shift(img,sp,sr):
 def thresh_to_binary(img):
     binary_img = ((img > 200) * 255).astype('uint8')
     return binary_img
+
+def jaccard_index(segmented_images,groundtruth_images):
+    
+    
+    '''
+        Performs jaccard index calculation on an image or set of images to assess mass mask placement.
+        
+        Args:
+        segmented_images(uint8): GRAYSCALE predicted mask image 0R list of predicted mask images.
+        groundtruth_images(uint8): GRAYSCALE groundtruth mask image 0R list of groundtruth mask images.
+        
+        Returns:
+        av_jaccard_index (float): max jaccard index for one image or average max jaccard index for several images.
+        '''
+    
+    if len(numpy.shape(segmented_images)) == 2:
+        
+        if numpy.shape(segmented_images) != numpy.shape(groundtruth_images):
+            raise ValueError(
+                             "Error in jaccard_index(): the number of groundtruth images is different than the number of segmented images")
+        
+        _, contours, _ = cv2.findContours(segmented_images, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        save_jaccard = numpy.zeros(len(contours))
+        if len(contours) == 0:
+            av_max_jaccard = 0
+        else:
+            for i in range(0, len(contours)):
+                mask = numpy.zeros(segmented_images.shape, dtype='uint8')
+                cv2.drawContours(mask, [contours[i]], -1, 255, thickness=cv2.FILLED)
+                save_jaccard[i] = jaccard_similarity_score(groundtruth_images, mask)
+            av_max_jaccard = numpy.amax(save_jaccard)
+    
+    else:
+        num_segmented_images = len(segmented_images)
+        num_groundtruth_images = len(groundtruth_images)
+        
+        # Checks to ensure input are of the correct format
+        if 0 == num_segmented_images:
+            raise ValueError("Error in jaccard_index(): the set of segmented images is empty")
+            sys.exit()
+        elif num_groundtruth_images != num_segmented_images:
+            raise ValueError(
+                             "Error in jaccard_index(): the number of groundtruth images {} is different than the number of segmented images {}".format(num_groundtruth_images, num_segmented_images))
+            sys.exit()
+
+        max_jaccard = 0
+        for j in range (0,num_segmented_images):
+            if len(contours) == 0:
+                max_jaccard = max_jaccard + 0
+            else:
+                _, contours, _ = cv2.findContours(segmented_images[j], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                save_jaccard = numpy.zeros(len(contours))
+                for i in range(0, len(contours)):
+                    mask = numpy.zeros(segmented_images[j].shape, dtype='uint8')
+                    cv2.drawContours(mask, [contours[i]], -1, 255, thickness=cv2.FILLED)
+                    save_jaccard[i] = jaccard_similarity_score(groundtruth_images[j], mask)
+                max_jaccard = max_jaccard + numpy.amax(save_jaccard)
+
+        av_max_jaccard = max_jaccard/num_images
+    
+    return av_max_jaccard
