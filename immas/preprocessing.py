@@ -107,7 +107,7 @@ def waveletTransform (image,  kernel_size =5):
         kernel : size of kernel used for median filter(default = 5)
 
     Returns:
-         image obtained after inverse transfrom of filtered image details.
+         image obtained after inverse transfrom of filtered image details (converted to int).
 
     The dwt2() function performs single level 2D Discrete Wavelet Transform.
     Parameters: 
@@ -122,8 +122,8 @@ def waveletTransform (image,  kernel_size =5):
     HL = median_filter(HL, kernel_size)
     HH = median_filter(HH, kernel_size)
     coeffs2 = LL, (LH, HL, HH) 
-
-    return pywt.idwt2(coeffs2, 'db4')
+    result = pywt.idwt2(coeffs2, 'db4')
+    return result.astype(int)
 
 def morphoEnhancement(image, kernel_size = 20):
     
