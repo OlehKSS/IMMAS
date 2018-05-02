@@ -129,6 +129,7 @@ def waveletTransform (image,  kernel_size =5):
     result = (((result - imgmin) * ((newmax - newmin)/(imgmax - imgmin))) + newmin).astype('uint16')
     return result
 
+
 def morphoEnhancement(image, kernel_size = 20):
     
     '''
