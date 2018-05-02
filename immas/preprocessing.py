@@ -123,7 +123,7 @@ def waveletTransform (image,  kernel_size =5):
     HH = median_filter(HH, kernel_size)
     coeffs2 = LL, (LH, HL, HH) 
     result = pywt.idwt2(coeffs2, 'db4')
-    return result.astype(int)
+    return result.astype('uint8')
 
 def morphoEnhancement(image, kernel_size = 20):
     
