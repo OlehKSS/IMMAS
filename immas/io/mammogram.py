@@ -60,7 +60,7 @@ class MammogramImage:
     def uncropped_image(self):
         '''Returns uncropped image.'''
 
-        uncropped_image = self._image_mask.astype("uint16")
+        uncropped_image = self._image_mask.astype(self.image_data.dtype)
         
         x, y, w, h = self._bounding_rect.values()
         uncropped_image[y:y+h, x:x+w] = self.image_data
@@ -132,7 +132,8 @@ class MammogramImage:
 
         Args:
             contour_max_number (int): maximum number of contours (without groundtruth) 
-            to take into account, default is 10.
+            to take into account, default is 10. In case you do not want to limit the number 
+            of contours provide None as the parameter value.
 
         Returns:
             (pandas.DataFrame, [opencv.contour]): features of selected contours 

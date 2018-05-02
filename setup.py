@@ -12,5 +12,6 @@ setup(
    'opencv-python', 
    'PyWavelets', 
    'scipy',
+   'scikit-learn',
    'pandas'], # external packages as dependencies
 )
