@@ -117,7 +117,7 @@ def waveletTransform (image,  kernel_size =5):
     coeffs2 = pywt.dwt2(image, 'db4')
     LL, (LH, HL, HH) = coeffs2
 
-    LL = math.sqrt(2)*LL 
+    #LL = math.sqrt(2)*LL 
     LH = median_filter(LH, kernel_size)
     HL = median_filter(HL, kernel_size)
     HH = median_filter(HH, kernel_size)
