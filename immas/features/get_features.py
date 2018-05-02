@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from pandas import DataFrame
 from pandas import concat
+import traceback
 
 from .binarization import get_candidates_mask
 from .geometry import get_geom_features
@@ -16,7 +17,8 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
         img (numpy.array): image, which features to find
         mask_ground_truth (np.array): mask for extracting mass region, default is None.
         contour_max_number (int): maximum number of contours (without groundtruth) 
-        to take into account, default is 10.
+        to take into account, default is 10. In case you do not want to limit the number 
+        of contours provide None as the parameter value.
 
     Returns:
         (pandas.DataFrame, [opencv.contour]): features of selected contours 
@@ -41,8 +43,16 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
     _, contours, _ = cv2.findContours(img_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # sort obtained contours by area in descending order
     contours.sort(key=lambda c: cv2.contourArea(c), reverse=True)
-    # select biggest contours
-    contours = contours[:contour_max_number]
+
+    # how many contours should we investigate
+    if (contour_max_number is None) or (len(contours) < contour_max_number):
+        # in case we do not have enough contours in our image
+        # or we do not want to limit the number of contours to select
+        # we do not need to change controus array in this case
+        contour_max_number = len(contours)
+    else:
+        # select biggest contours, according to provided max number of contours
+        contours = contours[:contour_max_number]
 
     geom_features = get_geom_features(contours[0])
     intens_features = get_itensity_features(img, contours[0])
@@ -88,12 +98,15 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
     return (DataFrame(arr_features, columns=features_names), contours)
 
 
-def get_dataset_features(data):
+def get_dataset_features(data, contour_max_number=10):
     '''
     Function returns list of features for all of the mammograms.
 
     Args:
         data ([MammogramImage]): list (iterable) of the mammograms from dataset.
+        contour_max_number (int): maximum number of contours (without groundtruth) 
+        to take into account, default is 10. In case you do not want to limit the number 
+        of contours provide None as the parameter value.
 
     Returns:
         pandas.DataFrame: feature of all images combined in one data table.    
@@ -104,12 +117,13 @@ def get_dataset_features(data):
     for mm in data:
         try:
             mm.read_data()
-            features, _ = mm.get_img_features()
+            features, _ = mm.get_img_features(contour_max_number)
             feat_data_frames.append(features)
         except Exception as e:
             print(f"Caught an exception, mammogram {mm.file_name}")
             print(type(e))
             print(e.args)
-            print(e)    
+            print(e)
+            print(traceback.format_exc())  
 
     return concat(feat_data_frames, ignore_index=True)

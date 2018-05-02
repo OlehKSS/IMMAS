@@ -132,7 +132,8 @@ class MammogramImage:
 
         Args:
             contour_max_number (int): maximum number of contours (without groundtruth) 
-            to take into account, default is 10.
+            to take into account, default is 10. In case you do not want to limit the number 
+            of contours provide None as the parameter value.
 
         Returns:
             (pandas.DataFrame, [opencv.contour]): features of selected contours 
