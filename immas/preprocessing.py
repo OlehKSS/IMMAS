@@ -116,15 +116,18 @@ def waveletTransform (image,  kernel_size =5):
     '''
     coeffs2 = pywt.dwt2(image, 'db4')
     LL, (LH, HL, HH) = coeffs2
-
     LL = math.sqrt(2)*LL 
     LH = median_filter(LH, kernel_size)
     HL = median_filter(HL, kernel_size)
     HH = median_filter(HH, kernel_size)
     coeffs2 = LL, (LH, HL, HH) 
     result = pywt.idwt2(coeffs2, 'db4')
-    np.uint
-    return result.astype('uint16')
+    imgmax = np.max(result)
+    imgmin = np.min(result)
+    newmax = 65535
+    newmin = 0
+    result = (((result - imgmin) * ((newmax - newmin)/(imgmax - imgmin))) + newmin).astype('uint16')
+    return result
 
 def morphoEnhancement(image, kernel_size = 20):
     
