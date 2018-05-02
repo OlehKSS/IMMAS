@@ -60,7 +60,7 @@ class MammogramImage:
     def uncropped_image(self):
         '''Returns uncropped image.'''
 
-        uncropped_image = self._image_mask.astype("uint16")
+        uncropped_image = self._image_mask.astype(self.image_data.dtype)
         
         x, y, w, h = self._bounding_rect.values()
         uncropped_image[y:y+h, x:x+w] = self.image_data
