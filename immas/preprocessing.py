@@ -170,6 +170,6 @@ def fullPreprocessing (img):
         (new_img): image obtained after CLAHE application. 
     '''
 
-    new_img = morphoEnhancement(img)
-    new_img = waveletTransform(img)
-    return new_img
+    img = morphoEnhancement(img)
+    img = waveletTransform(img)
+    return img
