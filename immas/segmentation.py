@@ -1,12 +1,13 @@
 import cv2, numpy, sys
 from sklearn.metrics import jaccard_similarity_score
+from immas import preprocessing
 
 def multithresholding(img):
     '''
         Performs multi-thresholding to aid segmentation.
         
         Args:
-        img: GRAYSCALE image file.
+        img (uint): GRAYSCALE image file.
         
         Returns:
         thresholded_img (uint8): thresholded image file.
@@ -74,7 +75,7 @@ def mean_shift(img,sp,sr):
         Performs mean shifting to aid segmentation.
         
         Args:
-        img: image file.
+        img (uint): image file.
         sp (int): The spatial window radius.
         sr (int): The color window radius.
         
@@ -119,6 +120,13 @@ def jaccard_index(segmented_images,groundtruth_images):
         if numpy.shape(segmented_images) != numpy.shape(groundtruth_images):
             raise ValueError(
                              "Error in jaccard_index(): the number of groundtruth images is different than the number of segmented images")
+            sys.exit()
+        elif segmented_images.dtype != 'uint8':
+            raise ValueError("Error in jaccard_index(): segmented_images are not uint8")
+            sys.exit()
+        elif groundtruth_images.dtype != 'uint8':
+            raise ValueError("Error in jaccard_index(): groundtruth_images are not uint8")
+            sys.exit()
         
         _, contours, _ = cv2.findContours(segmented_images, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         save_jaccard = numpy.zeros(len(contours))
@@ -143,6 +151,12 @@ def jaccard_index(segmented_images,groundtruth_images):
             raise ValueError(
                              "Error in jaccard_index(): the number of groundtruth images {} is different than the number of segmented images {}".format(num_groundtruth_images, num_segmented_images))
             sys.exit()
+        elif segmented_images[0].dtype != 'uint8':
+            raise ValueError("Error in jaccard_index(): segmented_images are not uint8")
+            sys.exit()
+        elif groundtruth_images[0].dtype != 'uint8':
+            raise ValueError("Error in jaccard_index(): groundtruth_images are not uint8")
+            sys.exit()
 
         max_jaccard = 0
         for j in range (0,num_segmented_images):
@@ -157,6 +171,22 @@ def jaccard_index(segmented_images,groundtruth_images):
                     save_jaccard[i] = jaccard_similarity_score(groundtruth_images[j], mask)
                 max_jaccard = max_jaccard + numpy.amax(save_jaccard)
 
-        av_max_jaccard = max_jaccard/num_images
+        av_max_jaccard = max_jaccard/num_segmented_images
     
     return av_max_jaccard
+
+
+def fullSegmentation(img):
+    '''
+    Applies specific segmentation sequence to an image
+
+    Args:
+        img (uint): image file.
+
+    Returns:
+        new_img (uint8): image obtained after segmentation
+    '''
+    img = multithresholding(img)
+    img = thresh_to_binary(img)
+    img = preprocessing.open(img, (20, 20))
+    return img

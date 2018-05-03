@@ -1,7 +1,7 @@
 import cv2
 
-from ..segmentation import multithresholding
-from ..preprocessing import clahe
+from ..segmentation import fullSegmentation
+from ..preprocessing import fullPreprocessing
 
 def get_candidates_mask(img):
     '''
@@ -15,9 +15,8 @@ def get_candidates_mask(img):
         numpy.array: binary images that will be used for contour and feature extraction.    
     '''
 
-    img_clahe = clahe(img)
-    img_thresh = multithresholding(img_clahe)
-    _, img_thresh = cv2.threshold(img_thresh, img_thresh.max() - 1, 1, cv2.THRESH_BINARY)
+    img_processed = fullPreprocessing(img)
+    img_thresh = fullSegmentation(img_processed)
 
     return img_thresh
     
