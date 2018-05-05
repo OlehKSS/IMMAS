@@ -186,7 +186,9 @@ def fullSegmentation(img):
     Returns:
         new_img (uint8): image obtained after segmentation
     '''
-    img = multithresholding(img)
-    img = thresh_to_binary(img)
+    img = segmentation.mean_shift(img, 20, 20)
+    img = segmentation.multithresholding(img)
+    img = segmentation.thresh_to_binary(img)
     img = preprocessing.open(img, (20, 20))
+ 
     return img

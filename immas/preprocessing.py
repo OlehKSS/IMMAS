@@ -171,7 +171,7 @@ def fullPreprocessing (img):
     '''
 
 
-    img = morphoEnhancement(img)
+    img = morphoEnhancement(img, 20, 10)
     img = waveletTransform(img)
     return img
 
