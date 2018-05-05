@@ -62,7 +62,7 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder,
     shuffle(imgs_mass)
     shuffle(imgs_clean)
 
-    train_imgs = imgs_mass[1:train_imgs_mass_len] + imgs_clean[1:train_imgs_clean_len]
+    train_imgs = imgs_mass[:train_imgs_mass_len] + imgs_clean[:train_imgs_clean_len]
     test_imgs = imgs_mass[train_imgs_mass_len:] + imgs_clean[train_imgs_clean_len:]
 
     shuffle(train_imgs)
