@@ -126,7 +126,7 @@ class MammogramImage:
             self._read_ground_truth(self._ground_truth_path)
 
 
-    def get_img_features(self, contour_max_number=10):
+    def get_img_features(self, contour_max_number=10, train=True):
         '''
         Finds mass candidates contours and their features.
 
@@ -134,6 +134,9 @@ class MammogramImage:
             contour_max_number (int): maximum number of contours (without groundtruth) 
             to take into account, default is 10. In case you do not want to limit the number 
             of contours provide None as the parameter value.
+            train (bool): if True, dataframe of features will be returned with correct class
+            ids assigned to each candidate region, if False all class ids will be zero. Default
+            value is True.
 
         Returns:
             (pandas.DataFrame, [opencv.contour]): features of selected contours 
@@ -143,10 +146,12 @@ class MammogramImage:
         if self.has_masses:
             f_c = get_img_features(self.image_data, 
                                    mask_ground_truth=self.cropped_ground_truth, 
-                                   contour_max_number=contour_max_number)
+                                   contour_max_number=contour_max_number,
+                                   train=train)
         else:
             f_c = get_img_features(self.image_data, 
-                                   contour_max_number=contour_max_number)
+                                   contour_max_number=contour_max_number,
+                                   train=train)
 
         self._candidates_features, self._contours = f_c
 
