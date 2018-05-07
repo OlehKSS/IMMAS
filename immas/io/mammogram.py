@@ -139,7 +139,15 @@ class MammogramImage:
             (pandas.DataFrame, [opencv.contour]): features of selected contours 
             and list of contours.    
         '''
-        f_c = get_img_features(self.image_data, self.cropped_ground_truth, contour_max_number)
+
+        if self.has_masses:
+            f_c = get_img_features(self.image_data, 
+                                   mask_ground_truth=self.cropped_ground_truth, 
+                                   contour_max_number=contour_max_number)
+        else:
+            f_c = get_img_features(self.image_data, 
+                                   contour_max_number=contour_max_number)
+
         self._candidates_features, self._contours = f_c
 
         return f_c
