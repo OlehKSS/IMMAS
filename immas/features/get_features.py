@@ -1,3 +1,5 @@
+import multiprocessing as mp
+
 import cv2
 import numpy as np
 from pandas import DataFrame
@@ -11,7 +13,8 @@ from .intensity import get_itensity_features
 def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=True):
     '''
     Function calculates features of the given image. Class id for the true positive is 1,
-    and for the false positive (not masses) -1.
+    and for the false positive (not masses) -1. Regions of interest that have area less than
+    2500 (50 by 50) will be ignored.
 
     Args:
         img (numpy.array): image, which features to find
@@ -31,6 +34,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=T
     img_thresh = get_candidates_mask(img)
 
     number_of_masses = 0
+    min_area = 50 * 50
 
     if train and (not (mask_ground_truth is None)):
         # delete mass region from the mask
@@ -44,6 +48,8 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=T
         number_of_masses = len(mass_contours) 
 
     _, contours, _ = cv2.findContours(img_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # select only contours with area higher than min area
+    contours = [c for c in contours if cv2.contourArea(c) > min_area]
     # sort obtained contours by area in descending order
     contours.sort(key=lambda c: cv2.contourArea(c), reverse=True)
 
@@ -137,3 +143,44 @@ def get_dataset_features(data, contour_max_number=10, train=True):
             print(traceback.format_exc())  
 
     return concat(feat_data_frames, ignore_index=True)
+
+
+def get_dataset_features_parallel(data, contour_max_number=10, train=True, processes=4):
+    '''
+    Function returns list of features for all of the mammograms.
+
+    Args:
+        data ([MammogramImage]): list (iterable) of the mammograms from dataset.
+        contour_max_number (int): maximum number of contours (without groundtruth) 
+        to take into account, default is 10. In case you do not want to limit the number 
+        of contours provide None as the parameter value.
+        train (bool): if True, dataframe of features will be returned with correct class
+        ids assigned to each candidate region, if False all class ids will be zero. Default
+        value is True.
+        processes (int): number of processes to create for code execution.
+
+    Returns:
+        pandas.DataFrame: feature of all images combined in one data table.    
+    '''
+
+    pool = mp.Pool(processes=processes)
+
+    feat_data_frames = [pool.apply(helper,args=(mm, contour_max_number, train)) for mm in data] 
+
+    return concat(feat_data_frames, ignore_index=True)
+
+
+def helper(img, contour_max_number, train):
+    '''Helper function for running dataset feature extraction in parallel.'''
+    try:
+        img.read_data()
+        features, _ = img.get_img_features(contour_max_number, train=train)
+
+        return features
+
+    except Exception as e:
+        print(f"Caught an exception, mammogram {img.file_name}")
+        print(type(e))
+        print(e.args)
+        print(e)
+        print(traceback.format_exc()) 
