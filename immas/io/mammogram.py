@@ -59,7 +59,7 @@ class MammogramImage:
         '''
 
         if (self._image_data.shape == img.shape):
-            self._image_data.shape = img.shape
+            self._image_data = img
         else:
             raise AttributeError(
                 "Can not assign numpy array of shape {0} to array of shape {1}".format(
