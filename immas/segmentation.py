@@ -119,7 +119,7 @@ def jaccard_index(segmented_images,groundtruth_images):
         
         if numpy.shape(segmented_images) != numpy.shape(groundtruth_images):
             raise ValueError(
-                             "Error in jaccard_index(): the number of groundtruth images is different than the number of segmented images")
+                             "Error in jaccard_index(): the size of groundtruth image is different than the size of segmented image")
             sys.exit()
         elif segmented_images.dtype != 'uint8':
             raise ValueError("Error in jaccard_index(): segmented_images are not uint8")
@@ -128,15 +128,25 @@ def jaccard_index(segmented_images,groundtruth_images):
             raise ValueError("Error in jaccard_index(): groundtruth_images are not uint8")
             sys.exit()
         
-        _, contours, _ = cv2.findContours(segmented_images, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        save_jaccard = numpy.zeros(len(contours))
-        if len(contours) == 0:
+        _, segmented_contours, _ = cv2.findContours(segmented_images, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(segmented_contours) == 0:
             av_max_jaccard = 0
         else:
-            for i in range(0, len(contours)):
-                mask = numpy.zeros(segmented_images.shape, dtype='uint8')
-                cv2.drawContours(mask, [contours[i]], -1, 255, thickness=cv2.FILLED)
-                save_jaccard[i] = jaccard_similarity_score(groundtruth_images, mask)
+            _, groundtruth_contours, _ = cv2.findContours(groundtruth_images, cv2.RETR_EXTERNAL,
+                                                          cv2.CHAIN_APPROX_SIMPLE)
+            save_jaccard = numpy.zeros(len(segmented_contours) * len(groundtruth_contours))
+            counter = 0
+            for i in range(0, len(segmented_contours)):
+                for j in range(0, len(groundtruth_contours)):
+                    groundtruth_mask = numpy.zeros(segmented_images.shape, dtype='uint8')
+                    cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
+                    segmented_mask = numpy.zeros(segmented_images.shape, dtype='uint8')
+                    cv2.drawContours(segmented_mask, [segmented_contours[i]], -1, 255, thickness=cv2.FILLED)
+                    summed_images = (groundtruth_mask / 2) + (segmented_mask / 2)
+                    union_pixels = (summed_images.shape[0] * summed_images.shape[1]) - (summed_images == 0).sum()
+                    intersection_pixels = (summed_images == 255).sum()
+                    save_jaccard[counter] = intersection_pixels / union_pixels
+                    counter = counter + 1
             av_max_jaccard = numpy.amax(save_jaccard)
     
     else:
@@ -157,22 +167,33 @@ def jaccard_index(segmented_images,groundtruth_images):
         elif groundtruth_images[0].dtype != 'uint8':
             raise ValueError("Error in jaccard_index(): groundtruth_images are not uint8")
             sys.exit()
+        num_images = num_segmented_images
 
         max_jaccard = 0
-        for j in range (0,num_segmented_images):
-            if len(contours) == 0:
-                max_jaccard = max_jaccard + 0
+        for j in range(0, num_images):
+            _, segmented_contours, _ = cv2.findContours(segmented_images[j], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if len(segmented_contours) == 0:
+                continue
             else:
-                _, contours, _ = cv2.findContours(segmented_images[j], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                save_jaccard = numpy.zeros(len(contours))
-                for i in range(0, len(contours)):
-                    mask = numpy.zeros(segmented_images[j].shape, dtype='uint8')
-                    cv2.drawContours(mask, [contours[i]], -1, 255, thickness=cv2.FILLED)
-                    save_jaccard[i] = jaccard_similarity_score(groundtruth_images[j], mask)
+                _, groundtruth_contours, _ = cv2.findContours(groundtruth_images[j], cv2.RETR_EXTERNAL,
+                                                              cv2.CHAIN_APPROX_SIMPLE)
+                save_jaccard = numpy.zeros(len(segmented_contours) * len(groundtruth_contours))
+                counter = 0
+                for i in range(0, len(segmented_contours)):
+                    for k in range(0, len(groundtruth_contours)):
+                        groundtruth_mask = numpy.zeros(segmented_images[j].shape, dtype='uint8')
+                        cv2.drawContours(groundtruth_mask, [groundtruth_contours[k]], -1, 255, thickness=cv2.FILLED)
+                        segmented_mask = numpy.zeros(segmented_images[j].shape, dtype='uint8')
+                        cv2.drawContours(segmented_mask, [segmented_contours[i]], -1, 255, thickness=cv2.FILLED)
+                        summed_images = (groundtruth_mask / 2) + (segmented_mask / 2)
+                        union_pixels = (summed_images.shape[0] * summed_images.shape[1]) - (summed_images == 0).sum()
+                        intersection_pixels = (summed_images == 255).sum()
+                        save_jaccard[counter] = intersection_pixels / union_pixels
+                        counter = counter + 1
+                print(save_jaccard)
                 max_jaccard = max_jaccard + numpy.amax(save_jaccard)
+        av_max_jaccard = max_jaccard / num_images
 
-        av_max_jaccard = max_jaccard/num_segmented_images
-    
     return av_max_jaccard
 
 
