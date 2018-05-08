@@ -19,9 +19,9 @@ class MammogramImage:
 
     def __init__(self, image_path, mask_path, ground_truth_path=None, pmuscle_mask_path=None,
                  load_data=True, file_name=None):      
-        self.image_data = None
         self.file_name = file_name
 
+        self._image_data = None
         self._image_ground_truth = None
         self._image_mask = None
         # rectangle that bound brest
@@ -39,6 +39,35 @@ class MammogramImage:
             self.read_data()
 
 
+    @property
+    def image_data(self):
+        '''Returns cropped image'''
+
+        return self._image_data
+
+
+    @image_data.setter
+    def image_data(self, img):
+        '''
+        Sets the image data value. Will raise an error if the sizes of images
+        do not match.
+
+        Args:
+            img (numpy.array): image to assign to.
+
+        Returns: None.   
+        '''
+
+        if (self._image_data.shape == img.shape):
+            self._image_data.shape = img.shape
+        else:
+            raise AttributeError(
+                "Can not assign numpy array of shape {0} to array of shape {1}".format(
+                    img.shape, 
+                    self._image_data.shape)
+                )
+
+   
     @property
     def has_masses(self):
         '''
@@ -60,10 +89,10 @@ class MammogramImage:
     def uncropped_image(self):
         '''Returns uncropped image.'''
 
-        uncropped_image = self._image_mask.astype(self.image_data.dtype)
+        uncropped_image = self._image_mask.astype(self._image_data.dtype)
         
         x, y, w, h = self._bounding_rect.values()
-        uncropped_image[y:y+h, x:x+w] = self.image_data
+        uncropped_image[y:y+h, x:x+w] = self._image_data
 
         return uncropped_image
 
@@ -107,7 +136,7 @@ class MammogramImage:
         
         x, y, w, h = self._bounding_rect.values()
         cropped_mask = self._image_mask[y:y+h, x:x+w]
-        self.image_data = self.image_data * cropped_mask
+        self._image_data = self._image_data * cropped_mask
   
 
     def read_data(self):
@@ -144,12 +173,12 @@ class MammogramImage:
         '''
 
         if self.has_masses:
-            f_c = get_img_features(self.image_data, 
+            f_c = get_img_features(self._image_data, 
                                    mask_ground_truth=self.cropped_ground_truth, 
                                    contour_max_number=contour_max_number,
                                    train=train)
         else:
-            f_c = get_img_features(self.image_data, 
+            f_c = get_img_features(self._image_data, 
                                    contour_max_number=contour_max_number,
                                    train=train)
 
@@ -175,11 +204,11 @@ class MammogramImage:
         # saves mask applied to the image, it is required for final result comparison
         self._image_mask = mask
         # crop image according to the given mask
-        self.image_data = image * mask
+        self._image_data = image * mask
         non_zero_pxls = cv2.findNonZero(mask)
         x, y, w, h = cv2.boundingRect(non_zero_pxls)
         self._bounding_rect = {"x": x, "y": y, "width": w, "height": h}
-        self.image_data = self.image_data[y:y+h, x:x+w]
+        self._image_data = self._image_data[y:y+h, x:x+w]
 
 
     def _read_ground_truth(self, ground_truth_path):
