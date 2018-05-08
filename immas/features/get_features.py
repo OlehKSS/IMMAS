@@ -14,7 +14,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=T
     '''
     Function calculates features of the given image. Class id for the true positive is 1,
     and for the false positive (not masses) -1. Regions of interest that have area less than
-    2500 (50 by 50) will be ignored.
+    625 (25 by 25) will be ignored.
 
     Args:
         img (numpy.array): image, which features to find
@@ -34,7 +34,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=T
     img_thresh = get_candidates_mask(img)
 
     number_of_masses = 0
-    min_area = 50 * 50
+    min_area = 25 * 25
 
     if train and (not (mask_ground_truth is None)):
         # delete mass region from the mask
