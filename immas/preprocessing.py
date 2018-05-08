@@ -141,7 +141,7 @@ def waveletTransform (image,  kernel_size =5):
     # reshape the result row as a matrix
     result.reshape(rows, cols)
     # resize to the original image size
-    result.resize(rows_in, cols_in)
+    result = result[:rows_in, :cols_in]
     
     return result
 
