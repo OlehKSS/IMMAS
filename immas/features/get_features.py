@@ -8,7 +8,7 @@ from .binarization import get_candidates_mask
 from .geometry import get_geom_features
 from .intensity import get_itensity_features
 
-def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
+def get_img_features(img, mask_ground_truth=None, contour_max_number=10, train=True):
     '''
     Function calculates features of the given image. Class id for the true positive is 1,
     and for the false positive (not masses) -1.
@@ -19,6 +19,9 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
         contour_max_number (int): maximum number of contours (without groundtruth) 
         to take into account, default is 10. In case you do not want to limit the number 
         of contours provide None as the parameter value.
+        train (bool): if True, dataframe of features will be returned with correct class
+        ids assigned to each candidate region, if False all class ids will be zero. Default
+        value is True.
 
     Returns:
         (pandas.DataFrame, [opencv.contour]): features of selected contours 
@@ -29,7 +32,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
 
     number_of_masses = 0
 
-    if not (mask_ground_truth is None):
+    if train and (not (mask_ground_truth is None)):
         # delete mass region from the mask
         _, mask_ground_truth = cv2.threshold(mask_ground_truth, 0, 1, cv2.THRESH_BINARY)
         img_thresh = img_thresh * (1 - mask_ground_truth)
@@ -80,7 +83,7 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
             # since we work here with false positives
             arr_features[index, -1] = -1
 
-    if not (mask_ground_truth is None):
+    if train and (not (mask_ground_truth is None)):
         # appends mass contours, true positive
         for index, contour in enumerate(mass_contours):
                 geom_features = get_geom_features(contour)
@@ -95,10 +98,14 @@ def get_img_features(img, mask_ground_truth=None, contour_max_number=10):
         # add groundtruth contours to the output as well
         contours = contours + mass_contours        
 
+    if not train:
+        # class ids should be 0 if we need to return test data frame of features
+        arr_features[:, -1] = 0
+
     return (DataFrame(arr_features, columns=features_names), contours)
 
 
-def get_dataset_features(data, contour_max_number=10):
+def get_dataset_features(data, contour_max_number=10, train=True):
     '''
     Function returns list of features for all of the mammograms.
 
@@ -107,6 +114,9 @@ def get_dataset_features(data, contour_max_number=10):
         contour_max_number (int): maximum number of contours (without groundtruth) 
         to take into account, default is 10. In case you do not want to limit the number 
         of contours provide None as the parameter value.
+        train (bool): if True, dataframe of features will be returned with correct class
+        ids assigned to each candidate region, if False all class ids will be zero. Default
+        value is True.
 
     Returns:
         pandas.DataFrame: feature of all images combined in one data table.    
@@ -117,7 +127,7 @@ def get_dataset_features(data, contour_max_number=10):
     for mm in data:
         try:
             mm.read_data()
-            features, _ = mm.get_img_features(contour_max_number)
+            features, _ = mm.get_img_features(contour_max_number, train=train)
             feat_data_frames.append(features)
         except Exception as e:
             print(f"Caught an exception, mammogram {mm.file_name}")
