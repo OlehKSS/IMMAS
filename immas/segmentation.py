@@ -119,7 +119,7 @@ def jaccard_index(segmented_images,groundtruth_images):
         
         if numpy.shape(segmented_images) != numpy.shape(groundtruth_images):
             raise ValueError(
-                             "Error in jaccard_index(): the number of groundtruth images is different than the number of segmented images")
+                             "Error in jaccard_index(): the size of groundtruth image is different than the size of segmented image")
             sys.exit()
         elif segmented_images.dtype != 'uint8':
             raise ValueError("Error in jaccard_index(): segmented_images are not uint8")
