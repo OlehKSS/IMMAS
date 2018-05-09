@@ -146,7 +146,7 @@ def waveletTransform (image,  kernel_size =5):
     return result
 
 
-def morphoEnhancement(image, kernel_size = 20, clahe_kernel = 2.0):
+def morphoEnhancement(image, kernel_size = 20, clahe_kernel = 12.0):
     
     '''
     Top hat approach for morphological enhancement
@@ -188,7 +188,8 @@ def fullPreprocessing (img):
     '''
 
 
-    img = morphoEnhancement(img)
+    img = open(img,(5,5))
+    img = morphoEnhancement(img,20,12.0)
     img = waveletTransform(img)
     return img
 
