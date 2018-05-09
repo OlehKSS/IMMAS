@@ -209,5 +209,6 @@ def fullSegmentation(img):
     '''
     img = multithresholding(img)
     img = thresh_to_binary(img)
-    img = preprocessing.open(img, (27, 27))
+    img = preprocessing.open(img, (23, 23))
+    img = preprocessing.close(img,(5,5))
     return img
