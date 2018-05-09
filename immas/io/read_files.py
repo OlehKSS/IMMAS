@@ -4,7 +4,7 @@ from math import floor
 
 from .mammogram import MammogramImage
 
-def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder, 
+def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder=None, 
                  train_set_fraction=0.25):
     '''
     Reads dataset and returns list of mammogram images found.
@@ -13,7 +13,7 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder,
         image_folder (str): path to the images.
         mask_folder (str): path to the mask for the images.        
         results_folder (str): path to the corectly segmented images.
-        pmuscle_mask_folder (str): path to the pectoral muscle masks.
+        pmuscle_mask_folder (str): path to the pectoral muscle masks, optional.
         train_set_fraction (float): fraction of the data to be used for training. 
         Default is 25%.
 
@@ -31,7 +31,9 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder,
     images = get_images(image_folder)
     masks = get_images(mask_folder, mask_extenstions)
     results = get_images(results_folder)
-    pmuscle_mask = get_images(pmuscle_mask_folder)
+
+    if not (pmuscle_mask_folder is None):
+        pmuscle_mask = get_images(pmuscle_mask_folder)
 
     if not len(images):
         raise RuntimeError("Could not find any image files.")
@@ -44,10 +46,15 @@ def read_dataset(image_folder, mask_folder, results_folder, pmuscle_mask_folder,
     # checking whether we have groundtruth (mass) or not in order to divide the dataset
     # into images with masses and without ones 
     for exam_name in images:
+        if not (pmuscle_mask_folder is None):
+            pmuscle_mask_path=pmuscle_mask.get(exam_name)
+        else:
+            pmuscle_mask_path = None
+        
         temp_new_mm_img = MammogramImage(image_path=images[exam_name],
                                         mask_path=masks[exam_name],
                                         ground_truth_path=results.get(exam_name),
-                                        pmuscle_mask_path=pmuscle_mask.get(exam_name),
+                                        pmuscle_mask_path=pmuscle_mask_path,
                                         load_data=False,
                                         file_name=exam_name)
         if results.get(exam_name):
