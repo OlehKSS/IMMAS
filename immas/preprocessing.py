@@ -50,6 +50,7 @@ def close(image,  kernel_size = (10,10)):
     KERNEL = np.ones(kernel_size,np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_CLOSE, KERNEL)
 
+
 def erode(image,  kernel_size = (10,10)):
 
     '''
@@ -64,6 +65,7 @@ def erode(image,  kernel_size = (10,10)):
     '''
     KERNEL = np.ones(kernel_size,np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_ERODE, KERNEL)
+
 
 def dilate(image,  kernel_size = (10,10)):
 
@@ -97,6 +99,7 @@ def clahe (image, clip=10.0, grid=8):
     '''
     myclahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(grid,grid))
     return myclahe.apply(image)
+
  
 def waveletTransform (image,  kernel_size =5):
     '''
@@ -114,6 +117,13 @@ def waveletTransform (image,  kernel_size =5):
     data – img
     wavelet – Wavelet to use in the transform. It defaultly uses "db4" also named as Daubechies 4
     '''
+        
+    # this for fixing problem with wavelet transform size differences
+    rows_in, cols_in = image.shape
+    # ourput image will have even number of rows and cols
+    rows = rows_in + rows_in % 2
+    cols = cols_in + cols_in % 2
+
     coeffs2 = pywt.dwt2(image, 'db4')
     LL, (LH, HL, HH) = coeffs2
     LL = math.sqrt(2)*LL 
@@ -127,6 +137,12 @@ def waveletTransform (image,  kernel_size =5):
     newmax = 65535
     newmin = 0
     result = (((result - imgmin) * ((newmax - newmin)/(imgmax - imgmin))) + newmin).astype('uint16')
+    
+    # reshape the result row as a matrix
+    result.reshape(rows, cols)
+    # resize to the original image size
+    result = result[:rows_in, :cols_in]
+    
     return result
 
 
@@ -155,6 +171,7 @@ def morphoEnhancement(image, kernel_size = 20, clahe_kernel = 2.0):
     
     final = clahe(enhanced, clahe_kernel)
     return final
+
 
 def fullPreprocessing (img):
     '''
