@@ -22,7 +22,7 @@ def get_img_features(img,
     '''
     Function calculates features of the given image. Class id for the true positive is 1,
     and for the false positive (not masses) -1. Regions of interest that have area less than
-    625 will be ignored.
+    2500 will be ignored.
 
     Args:
         img (numpy.array): image, which features to find
@@ -79,6 +79,8 @@ def get_img_features(img,
         # select biggest contours, according to provided max number of contours
         regions_fpr = regions_fpr[:contour_max_number]
 
+    arr_features = None
+
     for index, region in enumerate(regions_fpr):
         contour = region["contour"]
 
@@ -112,6 +114,17 @@ def get_img_features(img,
         geom_features = get_geom_features(contour)
         intens_features = get_itensity_features(img, contour)
         features = list(geom_features.values()) + list(intens_features.values())
+
+        if (arr_features is None) and (index == 0):
+            features_names = list(geom_features.keys()) + list(intens_features.keys())
+            # append class identificator
+            features_names.append("class_id")
+            # size of features array:
+            # rows = number of non-mass contours + number of mass contours
+            # cols = number of features + 1 (for class id)
+            arr_features = np.zeros((contour_max_number + number_of_masses,
+                                    len(features) + 1),
+                                    dtype=float)
 
         region["features"] = features
         # we append this data to the tail, so we need to add number of contours 
