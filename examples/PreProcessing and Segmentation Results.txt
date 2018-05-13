@@ -1,0 +1,65 @@
+First score: segmentation with opening
+Second score: segmentation with opening + closing
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.611790857541575, 0.6084101489138347)
+
+Plot_Result(img, Morpho_kernel_size=15, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.6084445170149407, 0.5932696003907263)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=10.0, PreOpenKernel=(7,7), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.6024143419338659, 0.5839473717674486)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=12.0, PreOpenKernel=(5,5), OpenKernel=(23,23), CloseKernel=(5,5))
+(0.6093338175679326, 0.6129834039514204)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(7,7))
+(0.6117908575415749, 0.6089528028222353)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(30,30), CloseKernel=(5,5))
+(0.6044077128284884, 0.6075569553315937)
+
+Plot_Result(img, Morpho_kernel_size=30, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(20,20), CloseKernel=(5,5))
+(0.6068958662672218, 0.593808460274132)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=12.0, PreOpenKernel=(10,10), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.5957726325119211, 0.5732198566253763)
+
+Plot_Result(img, Morpho_kernel_size=25, Morpho_clahe_kernel=10.0, PreOpenKernel=(5,5), OpenKernel=(25,25), CloseKernel=(5,5))
+(0.6107668447951966, 0.6108275069043924)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.6138290180043006, 0.6107703316954372)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=11.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
+(0.6117997004660065, 0.6074314080347247)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
+(0.6138290180043008, 0.6122604550084865)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=11.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(5,5))
+(0.6117997004660064, 0.6102873066249939)
+
+Plot_Result(img, Morpho_kernel_size=20, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(23,23), CloseKernel=(7,7))
+(0.6068746560205063, 0.5850686044699586)
+
+Plot_Result(img, Morpho_kernel_size=25, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(25,25), CloseKernel=(3,3))
+(0.6127786668510814, 0.6094253085780941)
+
+Plot_Result(img, Morpho_kernel_size=25, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(25,25), CloseKernel=(7,7))
+(0.6127786668510814, 0.6021518921480171)
+
+Plot_Result(img, Morpho_kernel_size=30, Morpho_clahe_kernel=11.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
+(0.5876657913939495, 0.591317245457768)
+
+Plot_Result(img, Morpho_kernel_size=25, Morpho_clahe_kernel=12.0, PreOpenKernel=(3,3), OpenKernel=(23,23), CloseKernel=(3,3))
+(0.5466331422418894, 0.5482597357768121)
+
+Plot_Result(img, Morpho_kernel_size=28, Morpho_clahe_kernel=7.5, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
+(0.6038522595534439, 0.6014176007382527)
+
+Plot_Result(img, Morpho_kernel_size=30, Morpho_clahe_kernel=8.0, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(7,7))
+(0.6005801778606853, 0.5977633584186183)
+
+Plot_Result(img, Morpho_kernel_size=24, Morpho_clahe_kernel=8.5, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
+(0.6128143418423113, 0.6127870432968789)
