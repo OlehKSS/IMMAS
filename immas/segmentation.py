@@ -210,12 +210,8 @@ def fullSegmentation(img):
     img = mean_shift(img, 20, 20)
     img = multithresholding(img)
     img = thresh_to_binary(img)
-<<<<<<< HEAD
-    img = preprocessing.open(img, (20, 20))
- 
-    return img
-=======
+
     img = preprocessing.open(img, (23, 23))
     img = preprocessing.close(img,(5,5))
     return img
->>>>>>> master
+
