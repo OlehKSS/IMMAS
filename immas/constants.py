@@ -9,4 +9,4 @@ CLASS_ID_TPR = 1
 CLASS_ID_FPR = -1
 
 # minimum area of ROI that will be considered
-MIN_ROI_AREA = 625
+MIN_ROI_AREA = 2500
