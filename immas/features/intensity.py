@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from math import pi, sqrt
+from skimage import feature
 
 def get_itensity_features(img, contour):
     '''
@@ -43,10 +44,18 @@ def get_itensity_features(img, contour):
 
     smoothness = 1 - (1 / (1 + std_dev*std_dev))
 
+    correlation, contrast, uniformity, homogeneity, energy, dissimilarity = get_GLCM_descriptors(mass_candidate)
+
     return {"mean_intensity": mean_intens, 
             "standard_deviation": std_dev, 
             "smoothness": smoothness,
-            "skewness": skewness}
+            "skewness": skewness,
+            "correlation": correlation,
+            "contrast": contrast,
+            "uniformity": uniformity,
+            "homogeneity": homogeneity,
+            "energy": energy,
+            "dissimilarity": dissimilarity}
 
 
 def get_mean_intensity(histogram, bins):
@@ -116,3 +125,29 @@ def get_skewness(histogram, bins, mean_intensity=None):
         skewness = skewness + ((gray_level - mean_intensity)**3) * histogram[index]
 
     return skewness
+
+def get_GLCM_descriptors(img):
+    '''
+    Returns statistical descriptors based on Grey Level Co-occurrence Matrix (GLCM)
+
+    Args:
+        img (np.array): image (mass candidate).
+
+    Returns:
+        float: correlation
+        float: contrast
+        float: uniformity
+        float: homogeneity
+        float: entropy
+        float: dissimilarity
+    '''
+    binned = (img/1024).astype('uint8')
+    GLCM = feature.greycomatrix(binned, [1], [0], levels=binned.max()+1, normed=True)
+    correlation = feature.greycoprops(GLCM, prop='correlation')
+    contrast = feature.greycoprops(GLCM,prop='contrast')
+    uniformity = feature.greycoprops(GLCM,prop='ASM')
+    homogeneity = feature.greycoprops(GLCM,prop='homogeneity')
+    energy = feature.greycoprops(GLCM,prop='energy')
+    dissimilarity = feature.greycoprops(GLCM,prop='dissimilarity')
+
+    return correlation, contrast, uniformity, homogeneity, energy, dissimilarity
