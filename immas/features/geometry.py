@@ -1,5 +1,5 @@
 import cv2
-from math import pi
+from math import pi, sqrt
 from sys import float_info
 
 def get_geom_features(contour):
@@ -17,8 +17,19 @@ def get_geom_features(contour):
     perimeter = cv2.arcLength(contour, True)
     area = cv2.contourArea(contour)
 
+    moments = cv2.moments(contour)
+    # Coordinates of the centroid of the image
+    cx = int(moments['m10']/moments['m00'])
+    cy = int(moments['m01']/moments['m00'])
+    for i in len(contour)
+        radial_length = sqrt((cx - contour[i][1])**2 + (cy - contour[i][2])**2)
+
+
+
+    shape_factor = 0
     if area != 0:
         circularity = (perimeter*perimeter) / (4*pi*area)
+        shape_factor = (perimeter**2)/area
     else:
         circularity = float_info.max
     # ac ratio
@@ -28,5 +39,6 @@ def get_geom_features(contour):
             "area": area, 
             "circularity": 
             circularity, 
-            "ac": ac}
+            "ac": ac,
+            'shape_factor': shape_factor}
             

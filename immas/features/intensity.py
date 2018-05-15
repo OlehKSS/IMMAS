@@ -40,7 +40,7 @@ def get_itensity_features(img, contour):
 
     mean_intens = get_mean_intensity(hist, bins)
     std_dev = get_standard_deviation(hist, bins, mean_intens)
-    skewness = get_skewness(hist, bins, mean_intens)
+    skewness, kurtosis = get_skewness_kurtosis(hist, bins, mean_intens)
 
     smoothness = 1 - (1 / (1 + std_dev*std_dev))
 
@@ -50,6 +50,7 @@ def get_itensity_features(img, contour):
             "standard_deviation": std_dev, 
             "smoothness": smoothness,
             "skewness": skewness,
+            "kurtosis": kurtosis,
             "correlation": correlation,
             "contrast": contrast,
             "uniformity": uniformity,
@@ -103,7 +104,7 @@ def get_standard_deviation(histogram, bins, mean_intensity=None):
     return sqrt(variance)
 
 
-def get_skewness(histogram, bins, mean_intensity=None):
+def get_skewness_kurtosis(histogram, bins, mean_intensity=None):
     '''
     Returns skewness of the image.
 
@@ -120,11 +121,13 @@ def get_skewness(histogram, bins, mean_intensity=None):
         mean_intensity = get_mean_intensity(histogram, bins)
 
     skewness = 0   
+    kurtosis = 0
 
     for index, gray_level in enumerate(bins):
         skewness = skewness + ((gray_level - mean_intensity)**3) * histogram[index]
+        kurtosis = kurtosis + ((gray_level - mean_intensity)**4) * histogram[index]
 
-    return skewness
+    return skewness, kurtosis
 
 def get_GLCM_descriptors(img):
     '''
@@ -138,7 +141,7 @@ def get_GLCM_descriptors(img):
         float: contrast
         float: uniformity
         float: homogeneity
-        float: entropy
+        float: energy
         float: dissimilarity
     '''
     binned = (img/1024).astype('uint8')
