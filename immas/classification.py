@@ -44,7 +44,7 @@ def find_match(m, visual_result = "no"):
     num_TP = 0
     num_FP = 0
     for r in m.regions:
-        if class_id == CLASS_ID_POS:
+        if r["class_id"] == CLASS_ID_POS:
             segmented_mask = numpy.zeros(m.image_data.shape, dtype='uint8')
             cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
             DICE = numpy.zeros(len(groundtruth_contours))
