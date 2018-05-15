@@ -1,7 +1,7 @@
 import numpy, cv2
 
 from . import basic_functions
-from .constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_FPR, CLASS_ID_TPR
+from .constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_POS, CLASS_ID_NEG
 
 def dice_similarity(segmented_images,groundtruth_images):
     '''
@@ -91,8 +91,8 @@ def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THR
     '''
 
     # class ids for masses and non-masses
-    id_tpr = CLASS_ID_TPR
-    id_fpr = CLASS_ID_FPR
+    id_tpr = CLASS_ID_POS
+    id_fpr = CLASS_ID_NEG
 
     regions_tpr = []
     regions_fpr = []
