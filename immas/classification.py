@@ -26,27 +26,43 @@ def dice_similarity(segmented_images,groundtruth_images):
     return 2*TP/(2*TP+FP+FN)  # according to the definition of DICE similarity score
 
 
-def find_match(img, visual_result = "no"):
-    _, segmented_contours, _ = cv2.findContours(img.image_data, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    _, groundtruth_contours, _ = cv2.findContours(img.cropped_ground_truth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+def find_match(m, visual_result = "no"):
+        '''
+        Determines if a mass candidate is a match or not.
+        
+        Args:
+        m (Mammogram object): classified image with associated regions
+        visual_result (string): yes/no to display accuracy for candidates and groundtruth images
+        
+        Returns:
+        num_TP (int): number of true positives regions in one image
+        num_FP (int): number of false positives regions in one image
+        num_mass_grd (int): number of masses in the groundtruth
+        '''
+    _, groundtruth_contours, _ = cv2.findContours(m.cropped_ground_truth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     num_mass_grd = len(groundtruth_contours)
-    
     num_TP = 0
     num_FP = 0
-    for i in range(0, len(segmented_contours)):
-        segmented_mask = numpy.zeros(img.image_data.shape, dtype='uint8')
-        cv2.drawContours(segmented_mask, [segmented_contours[i]], -1, 255, thickness=cv2.FILLED)
-        DICE = numpy.zeros(len(groundtruth_contours))
-        for j in range(0, len(groundtruth_contours)):
-            groundtruth_mask = numpy.zeros(img.image_data.shape, dtype='uint8')
-            cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
-            DICE[j] = dice_similarity(segmented_mask,groundtruth_mask)
-        if numpy.amax(DICE) >= 0.2:
-            num_TP = num_TP + 1
-        else:
-            num_FP = num_FP + 1
+    for r in m.regions:
+        if class_id == CLASS_ID_POS:
+            segmented_mask = numpy.zeros(m.image_data.shape, dtype='uint8')
+            cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
+            DICE = numpy.zeros(len(groundtruth_contours))
+            for j in range(0, len(groundtruth_contours)):
+                groundtruth_mask = numpy.zeros(img.image_data.shape, dtype='uint8')
+                cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
+                DICE[j] = dice_similarity(segmented_mask,groundtruth_mask)
+            if numpy.amax(DICE) >= DICE_INDEX_DEFAULT_THRESHOLD:
+                num_TP = num_TP + 1
+            else:
+                num_FP = num_FP + 1
+
     if visual_result == "yes":
-        basic_functions.accuracy(img.image_data,img.cropped_ground_truth,"yes")
+        segmented_mask = numpy.zeros(m.image_data.shape, dtype='uint8')
+        for r in m.regions:
+            if class_id == CLASS_ID_POS:
+                cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
+        basic_functions.accuracy(segmented_mask,m.cropped_ground_truth,"yes")
 
     return num_TP, num_FP, num_mass_grd
 
