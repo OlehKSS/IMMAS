@@ -27,7 +27,7 @@ def dice_similarity(segmented_images,groundtruth_images):
 
 
 def find_match(m, visual_result = "no"):
-        '''
+    '''
         Determines if a mass candidate is a match or not.
         
         Args:
