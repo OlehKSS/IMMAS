@@ -13,5 +13,6 @@ setup(
    'PyWavelets', 
    'scipy',
    'scikit-learn',
+   'scikit-image',
    'pandas'], # external packages as dependencies
 )

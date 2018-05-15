@@ -10,7 +10,7 @@ from .binarization import get_candidates_mask
 from .geometry import get_geom_features
 from .intensity import get_itensity_features
 
-from ..constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_FPR, CLASS_ID_TPR, MIN_ROI_AREA
+from ..constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_POS, CLASS_ID_NEG, MIN_ROI_AREA
 from ..classification import get_rois
 
 
@@ -37,8 +37,8 @@ def get_img_features(img,
         threshold will be considered as massses.
 
     Returns:
-        (pandas.DataFrame, [dict], [dict], [str]): features of selected contours, list of
-        true positive regions of interest, list of false positive regions of interest, list of
+        (pandas.DataFrame, [dict], [str]): features of selected contours, list of
+        true positive and false positive regions of interest, list of
         feature names. Each region is represented as an instance of class dict with fields:
         {
             "class_id: 1 for a mass, -1 for non-mass,
@@ -54,8 +54,8 @@ def get_img_features(img,
     min_area = MIN_ROI_AREA
 
     if train:
-        id_tpr = CLASS_ID_TPR
-        id_fpr = CLASS_ID_FPR
+        id_tpr = CLASS_ID_POS
+        id_fpr = CLASS_ID_NEG
     else:
         id_tpr = 0
         id_fpr = 0
@@ -134,8 +134,9 @@ def get_img_features(img,
         arr_features[contour_max_number + index, -1] = id_tpr
 
     features_df = DataFrame(arr_features, columns=features_names)
+    regions = regions_tpr + regions_fpr
     # class_id will be excluded from feature names in the output
-    return (features_df, regions_tpr, regions_fpr, features_names[:-1])
+    return (features_df, regions, features_names[:-1])
 
 
 def get_dataset_features(data, contour_max_number=10, train=True):

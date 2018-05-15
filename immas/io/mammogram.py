@@ -30,8 +30,7 @@ class MammogramImage:
         # rectangle that bound brest
         self._bounding_rect = None
         # true positive (masses) and false positive ROIs
-        self._regions_tpr = None
-        self._regions_fpr = None
+        self._regions = None
 
         self._image_path = image_path
         self._mask_path = mask_path
@@ -104,7 +103,7 @@ class MammogramImage:
         return self.image_ground_truth[y:y+h, x:x+w]
 
     @property
-    def regions_tpr(self):
+    def regions(self):
         '''
         Returns regions that were classified as masses as a dict object with fields.
         Each region is represented as an instance of class dict with fields:
@@ -116,22 +115,7 @@ class MammogramImage:
         }
         '''
 
-        return self._regions_tpr
-
-    @property
-    def regions_fpr(self):
-        '''
-        Returns false positive regions as a dict object with fields.
-        Each region is represented as an instance of class dict with fields:
-        {
-            "class_id: 1 for a mass, -1 for non-mass,
-            "contour": opencv defined contour,
-            "dice_index": maximum of the Dice index for the region,
-            "features": numpy array of features
-        }
-        '''
-
-        return self._regions_fpr
+        return self._regions
 
     def restore_background(self):
         '''
@@ -195,7 +179,7 @@ class MammogramImage:
                                    train=train,
                                    dice_threshold=dice_threshold)
 
-        candidates_features, self._regions_tpr, self._regions_fpr, f_names = f_c
+        candidates_features, self._regions, f_names = f_c
         # save feature names to the static variable ones
         if MammogramImage.feature_names is None:
             MammogramImage.feature_names = f_names
