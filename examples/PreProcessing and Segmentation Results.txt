@@ -63,3 +63,129 @@ Plot_Result(img, Morpho_kernel_size=30, Morpho_clahe_kernel=8.0, PreOpenKernel=(
 
 Plot_Result(img, Morpho_kernel_size=24, Morpho_clahe_kernel=8.5, PreOpenKernel=(5,5), OpenKernel=(27,27), CloseKernel=(3,3))
 (0.6128143418423113, 0.6127870432968789)
+
+
+def clahe (image, clip=12.0, grid=8):
+
+    '''
+    Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
+    Local details are enhanced even in regions that are darker or lighter than most of the image.
+        
+    Args:
+        img (uint16): image file.
+        clip (float): contrast limit (default = 12.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
+        grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
+
+    Returns:
+         image obtained after CLAHE application. 
+    '''
+    myclahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(grid,grid))
+    return myclahe.apply(image)
+
+def waveletTransform (image,  kernel_size =5):
+    '''
+    Wavelet transform performs sigle level 2D wavelet transform followed by median filtering and reconstruction by inverse wavelet transform.
+
+    Args:
+        img (uint16): image file.
+        kernel : size of kernel used for median filter(default = 5)
+
+    Returns:
+         image obtained after inverse transfrom of filtered image details (converted to int).
+
+    The dwt2() function performs single level 2D Discrete Wavelet Transform.
+    Parameters: 
+    data – img
+    wavelet – Wavelet to use in the transform. It defaultly uses "db4" also named as Daubechies 4
+    '''
+        
+    # this for fixing problem with wavelet transform size differences
+    rows_in, cols_in = image.shape
+    # ourput image will have even number of rows and cols
+    rows = rows_in + rows_in % 2
+    cols = cols_in + cols_in % 2
+
+    coeffs2 = pywt.dwt2(image, 'db4')
+    LL, (LH, HL, HH) = coeffs2
+    LL = math.sqrt(2)*LL 
+    LH = median_filter(LH, kernel_size)
+    HL = median_filter(HL, kernel_size)
+    HH = median_filter(HH, kernel_size)
+    coeffs2 = LL, (LH, HL, HH) 
+    result = pywt.idwt2(coeffs2, 'db4')
+    imgmax = np.max(result)
+    imgmin = np.min(result)
+    newmax = 65535
+    newmin = 0
+    result = (((result - imgmin) * ((newmax - newmin)/(imgmax - imgmin))) + newmin).astype('uint16')
+    
+    # reshape the result row as a matrix
+    result.reshape(rows, cols)
+    # resize to the original image size
+    result = result[:rows_in, :cols_in]
+    
+    return result
+
+
+def morphoEnhancement(image, kernel_size = 20, clahe_kernel = 12.0):
+    
+    '''
+    Top hat approach for morphological enhancement
+    
+    Args:
+        image (uint16):     image file
+        kernel_size (float):size of kernel for morphological operations, by 
+        default 20x20
+        
+    Returns:
+        image enhanced 
+        
+    It is possible to add the bright areas (top hat) to the image and subtract
+    the dark areas (bottom hat) from it. As a result, there will be an enhancement 
+    in the contrast between bright and dark areas. To improve the contrast even 
+    more clahe is applied
+    '''
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
+    tophat = cv2.morphologyEx(image, cv2.MORPH_TOPHAT, kernel)
+    bothat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, kernel)
+    enhanced = image + tophat - bothat
+    
+    final = clahe(enhanced, clahe_kernel)
+    return final
+
+
+def fullPreprocessing (img):
+    '''
+    Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
+    Local details are enhanced even in regions that are darker or lighter than most of the image.
+        
+    Args:
+        img (uint8): image file.
+        clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
+        grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
+
+    Returns:
+        (new_img): image obtained after CLAHE application. 
+    '''
+
+
+    img = open(img,(5,5))
+    img = morphoEnhancement(img,20,12.0)
+    img = waveletTransform(img)
+    return img
+
+def fullSegmentation(img):
+    '''
+    Applies specific segmentation sequence to an image
+
+    Args:
+        img (uint): image file.
+
+    Returns:
+        new_img (uint8): image obtained after segmentation
+    '''
+    img = multithresholding(img)
+    img = thresh_to_binary(img)
+    img = preprocessing.open(img, (23, 23))
+    img = preprocessing.close(img,(5,5))
+    return img

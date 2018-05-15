@@ -21,8 +21,8 @@ def get_geom_features(contour):
     # Coordinates of the centroid of the image
     cx = int(moments['m10']/moments['m00'])
     cy = int(moments['m01']/moments['m00'])
-    for i in len(contour)
-        radial_length = sqrt((cx - contour[i][1])**2 + (cy - contour[i][2])**2)
+    #for i in len(contour):
+    #    radial_length = sqrt((cx - contour[i][1])**2 + (cy - contour[i][2])**2)
 
 
 

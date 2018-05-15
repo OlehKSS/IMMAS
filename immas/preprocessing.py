@@ -83,7 +83,7 @@ def dilate(image,  kernel_size = (10,10)):
     return cv2.morphologyEx(image, cv2.MORPH_DILATE, KERNEL)
     
 
-def clahe (image, clip=10.0, grid=8):
+def clahe (image, clip=12.0, grid=8):
 
     '''
     Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
@@ -91,7 +91,7 @@ def clahe (image, clip=10.0, grid=8):
         
     Args:
         img (uint16): image file.
-        clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
+        clip (float): contrast limit (default = 12.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
         grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
 
     Returns:
