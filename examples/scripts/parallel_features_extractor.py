@@ -16,6 +16,7 @@ print("Number of images for training is {0}, number of images for testing is {1}
     len(data_set["train"]), len(data_set["test"])))
 
 print("Started train feature extraction.")
+time_start = int(time.time())
 features = get_dataset_features_parallel(data_set["train"], contour_max_number=None)
 #print("Started test feature extraction.")
 #features_test = get_dataset_features_parallel(data_set["test"], contour_max_number=None, train=False)
@@ -31,3 +32,12 @@ file_name_test = f"examples/feature-tables/test-data_{time_stamp}.csv"
 
 features.to_csv(path.join(path_immas, file_name_train))
 #features_test.to_csv(path.join(path_immas, file_name_test))
+
+time_spent = time_stamp - time_start
+time_spent_hours = time_spent // 3600
+time_spent_min = time_spent // 60
+time_spent_sec = time_spent - time_spent_hours * 3600 - time_spent_min * 60
+
+print(f"""Feature extraction was successful, it took {time_spent_hours} hours, 
+        {time_spent_min} minutes and {time_spent_sec} seconds.""")
+
