@@ -70,7 +70,7 @@ def get_itensity_features(img, contour):
     for i in range(0, len(contour)):
         radial_length[i] = sqrt((cx - contour[:, 0][i][0]) ** 2 + (cy - contour[:, 0][i][1]) ** 2)
     centroid_intensity = img[cy, cx]
-    [image_width,image_height] = np.ndarray.shape(img)
+    image_width, image_height = img.shape
     gradient = np.zeros((len(contour), 1))
     for i in range(0, len(contour)):
         y1 = contour[:, 0][i][1] - cy
@@ -87,11 +87,11 @@ def get_itensity_features(img, contour):
         else:
             x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
             y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
-        if x2 > image_width:
+        if x2 >= image_width:
             x2 = image_width-1
         elif x2 < 0:
             x2 = 0
-        elif y2 > image_height:
+        elif y2 >= image_height:
             y2 = image_height-1
         elif y2 < 0:
             y2 = 0
