@@ -1,6 +1,7 @@
 import cv2, numpy
 from math import pi, sqrt
 from sys import float_info
+import scipy
 
 def get_geom_features(contour):
     '''
@@ -32,6 +33,8 @@ def get_geom_features(contour):
     mean_NRL = numpy.mean(normalized_radial_length)
     SD_NRL = numpy.std(normalized_radial_length)
     ratio_SD_NRL_and_mean_RL = SD_NRL/mean_RL
+    entropy_NRL = scipy.stats.entropy(normalized_radial_length)
+
 
     shape_factor = 0
     if area != 0:
@@ -44,8 +47,10 @@ def get_geom_features(contour):
 
     return {"perimeter": perimeter, 
             "area": area, 
-            "circularity": 
-            circularity, 
+            "circularity": circularity,
             "ac": ac,
-            'shape_factor': shape_factor, "mean NRL": mean_NRL, "SD NRL": SD_NRL, "Ratio SD NRL and mean RL": ratio_SD_NRL_and_mean_RL}
-            
+            'shape_factor': shape_factor,
+            "mean NRL": mean_NRL,
+            "SD NRL": SD_NRL,
+            "Ratio SD NRL and mean RL": ratio_SD_NRL_and_mean_RL,
+            "entropy NRL": entropy_NRL}
