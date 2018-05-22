@@ -8,7 +8,7 @@ import cv2
 from skimage.feature import local_binary_pattern
 import numpy as np
 
-def get_roi_resizing (img, contour, roi_size=256):
+def get_roi_resizing (img, contour, roi_size=50):
     '''
     Returns region of interest (roi) from a contour by generating a bounding
     box and resizing it to roi_size
@@ -32,7 +32,7 @@ def get_roi_resizing (img, contour, roi_size=256):
     
     return roi
 
-def get_roi_cropping (img, contour, roi_size=256):
+def get_roi_cropping (img, contour, roi_size=50):
     '''
     Returns region of interest (roi) from a contour by calculating its centroid
     and generating a box of roi_size around it
@@ -79,8 +79,16 @@ def get_LBP (roi, P=8, R=1, METHOD='uniform', block_size=5):
     LBP_features = dict()
     counter = 0
     n_bins = int(P+R+1)
-    for r in range(0, roi.shape[0] -block_size , block_size):
-        for c in range(0, roi.shape[1] -block_size, block_size):
+    
+    if roi.shape[0]%5 != 0:
+        end_point_x = roi.shape[0] -block_size
+        end_point_y = roi.shape[1] -block_size
+    else:
+        end_point_x = roi.shape[0]
+        end_point_y = roi.shape[1]
+        
+    for r in range(0, end_point_x, block_size):
+        for c in range(0, end_point_y, block_size):
             window = roi[r:r+block_size,c:c+block_size]
             lbp = local_binary_pattern(window, P, R, METHOD)
             hist_current, _ = np.histogram(lbp, normed=True, bins=n_bins, range=(0, n_bins))  
