@@ -9,6 +9,7 @@ import traceback
 from .binarization import get_candidates_mask
 from .geometry import get_geom_features
 from .intensity import get_itensity_features
+from .localBinaryPatterns import get_roi_resizing, get_LBP
 
 from ..constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_POS, CLASS_ID_NEG, MIN_ROI_AREA
 from ..classification import get_rois
@@ -87,9 +88,13 @@ def get_img_features(img,
         if index == 0:
             geom_features = get_geom_features(contour)
             intens_features = get_itensity_features(img, contour)
+            roi_resized = get_roi_resizing(img, contour)
+            lpb_features = get_LBP(roi_resized)
 
-            features = list(geom_features.values()) + list(intens_features.values())
-            features_names = list(geom_features.keys()) + list(intens_features.keys())
+            features = list(geom_features.values()) + list(intens_features.values()) +\
+                list(lpb_features.values())
+            features_names = list(geom_features.keys()) + list(intens_features.keys()) +\
+                list(lpb_features.keys())
             # append class identificator
             features_names.append("class_id")
             # size of features array:
@@ -101,7 +106,11 @@ def get_img_features(img,
         else:
             geom_features = get_geom_features(contour)
             intens_features = get_itensity_features(img, contour)
-            features = list(geom_features.values()) + list(intens_features.values())
+            roi_resized = get_roi_resizing(img, contour)
+            lpb_features = get_LBP(roi_resized)
+
+            features = list(geom_features.values()) + list(intens_features.values()) +\
+                list(lpb_features.values())
 
         region["features"] = features
         arr_features[index, :-1] = features
@@ -113,7 +122,11 @@ def get_img_features(img,
 
         geom_features = get_geom_features(contour)
         intens_features = get_itensity_features(img, contour)
-        features = list(geom_features.values()) + list(intens_features.values())
+        roi_resized = get_roi_resizing(img, contour)
+        lpb_features = get_LBP(roi_resized)
+
+        features = list(geom_features.values()) + list(intens_features.values()) +\
+            list(lpb_features.values())
 
         if (arr_features is None) and (index == 0):
             features_names = list(geom_features.keys()) + list(intens_features.keys())
