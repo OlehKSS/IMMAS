@@ -129,7 +129,8 @@ def get_img_features(img,
             list(lpb_features.values())
 
         if (arr_features is None) and (index == 0):
-            features_names = list(geom_features.keys()) + list(intens_features.keys())
+            features_names = list(geom_features.keys()) + list(intens_features.keys()) +\
+                list(lpb_features.keys())
             # append class identificator
             features_names.append("class_id")
             # size of features array:
