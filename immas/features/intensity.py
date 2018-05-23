@@ -48,48 +48,7 @@ def get_itensity_features(img, contour):
 
     correlation, contrast, uniformity, homogeneity, energy, dissimilarity = get_GLCM_descriptors(mass_candidate)
 
-    # NCPS Calculation
-    # Coordinates of the centroid of the image
-    moments = cv2.moments(contour)
-    cx = int(moments['m10'] / moments['m00'])
-    cy = int(moments['m01'] / moments['m00'])
-    area = cv2.contourArea(contour)
-    intensities = np.zeros((len(contour), 1))
-    for i in range(0, len(contour)):
-        x = contour[:, 0][i][0]
-        y = contour[:, 0][i][1]
-        intensities[i] = img[y, x]
-    min_gray_coor = np.argmax(intensities)
-    a = contour[:, 0][min_gray_coor][0]
-    b = contour[:, 0][min_gray_coor][1]
-    NCPS = sqrt((cx - a) ** 2 + (cy - b) ** 2) / area
-
-    # Gradient calculation
-    # Find normalized radial length
-    radial_length = np.zeros((len(contour), 1))
-    for i in range(0, len(contour)):
-        radial_length[i] = sqrt((cx - contour[:, 0][i][0]) ** 2 + (cy - contour[:, 0][i][1]) ** 2)
-    centroid_intensity = img[cy, cx]
-    gradient = np.zeros((len(contour), 1))
-    for i in range(0, len(contour)):
-        y1 = contour[:, 0][i][1] - cy
-        theta = np.arcsin(y1 / radial_length[i])
-        if contour[:, 0][i][1] < cy and contour[:, 0][i][0] > cx:
-            x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
-            y2 = contour[:, 0][i][1] - abs(int(10 * np.sin(theta)))
-        elif contour[:, 0][i][1] < cy and contour[:, 0][i][0] < cx:
-            x2 = contour[:, 0][i][0] - abs(int(10 * np.cos(theta)))
-            y2 = contour[:, 0][i][1] - abs(int(10 * np.sin(theta)))
-        elif contour[:, 0][i][1] > cy and contour[:, 0][i][0] < cx:
-            x2 = contour[:, 0][i][0] - abs(int(10 * np.cos(theta)))
-            y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
-        else:
-            x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
-            y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
-        gradient[i] = centroid_intensity - img[y2, x2]
-    gradient_mean = np.mean(gradient)
-    gradient_SD = np.std(gradient)
-    gradient_skewness = scipy.stats.skew(gradient)
+    NCPS, gradient_mean, gradient_SD, gradient_skewness = get_ncps_radial_grad(img, contour)
 
     return {"NCPS": NCPS,
             "mean_intensity": mean_intens,
@@ -204,3 +163,76 @@ def get_GLCM_descriptors(img):
     dissimilarity = feature.greycoprops(GLCM, prop='dissimilarity')
 
     return correlation, contrast, uniformity, homogeneity, energy, dissimilarity
+
+
+def get_ncps_radial_grad(img, contour):
+    """
+    Helper function for obtaining NCPS, gradient mean,
+    gradient SD and gradient skewness.
+    """
+    # NCPS Calculation
+    # Coordinates of the centroid of the image
+    moments = cv2.moments(contour)
+    cx = int(moments['m10'] / moments['m00'])
+    cy = int(moments['m01'] / moments['m00'])
+    area = cv2.contourArea(contour)
+    intensities = np.zeros((len(contour), 1))
+    for i in range(0, len(contour)):
+        x = contour[:, 0][i][0]
+        y = contour[:, 0][i][1]
+        intensities[i] = img[y, x]
+    min_gray_coor = np.argmax(intensities)
+    a = contour[:, 0][min_gray_coor][0]
+    b = contour[:, 0][min_gray_coor][1]
+    NCPS = sqrt((cx - a) ** 2 + (cy - b) ** 2) / area
+
+    # Gradient calculation
+    # Find normalized radial length
+    radial_length = np.zeros((len(contour), 1))
+
+    for i in range(0, len(contour)):
+        radial_length[i] = sqrt((cx - contour[:, 0][i][0]) ** 2 + (cy - contour[:, 0][i][1]) ** 2)
+    
+    centroid_intensity = img[cy, cx]
+    image_height, image_width = img.shape
+    gradient = np.zeros((len(contour), 1))
+
+    for i in range(0, len(contour)):
+        y1 = contour[:, 0][i][1] - cy
+
+        if radial_length[i] == 0:
+            gradient[i] = 0
+            continue
+        
+        theta = np.arcsin(y1 / radial_length[i])
+
+        if contour[:, 0][i][1] < cy and contour[:, 0][i][0] > cx:
+            x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
+            y2 = contour[:, 0][i][1] - abs(int(10 * np.sin(theta)))
+        elif contour[:, 0][i][1] < cy and contour[:, 0][i][0] < cx:
+            x2 = contour[:, 0][i][0] - abs(int(10 * np.cos(theta)))
+            y2 = contour[:, 0][i][1] - abs(int(10 * np.sin(theta)))
+        elif contour[:, 0][i][1] > cy and contour[:, 0][i][0] < cx:
+            x2 = contour[:, 0][i][0] - abs(int(10 * np.cos(theta)))
+            y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
+        else:
+            x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
+            y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
+
+        if x2 >= image_width:
+            x2 = image_width-1
+        elif x2 < 0:
+            x2 = 0
+        
+        if y2 >= image_height:
+            y2 = image_height-1
+        elif y2 < 0:
+            y2 = 0
+
+        gradient[i] = img[contour[:, 0][i][1], contour[:, 0][i][0]] - img[y2, x2]
+
+    gradient_mean = np.mean(gradient)
+    gradient_SD = np.std(gradient)
+    gradient_skewness = scipy.stats.skew(gradient)
+
+    return NCPS, gradient_mean, gradient_SD, gradient_skewness
