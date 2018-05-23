@@ -199,6 +199,11 @@ def get_ncps_radial_grad(img, contour):
 
     for i in range(0, len(contour)):
         y1 = contour[:, 0][i][1] - cy
+
+        if radial_length[i] == 0:
+            gradient[i] = 0
+            continue
+        
         theta = np.arcsin(y1 / radial_length[i])
 
         if contour[:, 0][i][1] < cy and contour[:, 0][i][0] > cx:
@@ -213,16 +218,18 @@ def get_ncps_radial_grad(img, contour):
         else:
             x2 = contour[:, 0][i][0] + abs(int(10 * np.cos(theta)))
             y2 = contour[:, 0][i][1] + abs(int(10 * np.sin(theta)))
+
         if x2 >= image_width:
             x2 = image_width-1
         elif x2 < 0:
             x2 = 0
-        elif y2 >= image_height:
+        
+        if y2 >= image_height:
             y2 = image_height-1
         elif y2 < 0:
             y2 = 0
-        
-        gradient[i] = centroid_intensity - img[y2, x2]
+
+        gradient[i] = img[contour[:, 0][i][1], contour[:, 0][i][0]] - img[y2, x2]
 
     gradient_mean = np.mean(gradient)
     gradient_SD = np.std(gradient)
