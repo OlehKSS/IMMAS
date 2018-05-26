@@ -162,6 +162,7 @@ def get_dataset_features(data, contour_max_number=10, train=True):
         try:
             mm.read_data()
             features = mm.get_img_features(contour_max_number, train=train)
+            features.loc[:, "img_name"] = mm.file_name
             feat_data_frames.append(features)
         except Exception as e:
             print(f"Caught an exception, mammogram {mm.file_name}")
@@ -203,6 +204,7 @@ def helper(img, contour_max_number, train):
     try:
         img.read_data()
         features = img.get_img_features(contour_max_number, train=train)
+        features.loc[:, "img_name"] = img.file_name
 
         return features
 
