@@ -1,0 +1,32 @@
+DataSet without LBP
+
+Area under the ROC curve / Best parameters:
+
+First try:
+0.9435771697182487 {'C': 10, 'class_weight': {1: 20}, 'gamma': 0.0001, 'kernel': 'rbf'}
+0.9441749122247047 {'C': 7, 'class_weight': {1: 15}, 'gamma': 0.001, 'kernel': 'sigmoid'}
+0.9428923773322113 {'C': 0.001, 'class_weight': {1: 20}, 'kernel': 'linear'}
+0.9421930766329106 {'C': 0.5, 'class_weight': {1: 10}, 'coef0': 1.0, 'degree': 1, 'gamma': 0.01, 'kernel': 'poly'}
+
+Second try:
+0.937149986942518 {'C': 10, 'class_weight': {1: 20}, 'gamma': 0.0001, 'kernel': 'rbf'}
+0.9396773351130199 {'C': 50, 'class_weight': {1: 3}, 'gamma': 0.001, 'kernel': 'sigmoid'}
+0.9380640106781184 {'C': 0.003, 'class_weight': {1: 20}, 'kernel': 'linear'}
+0.9377564344369325 {'C': 7, 'class_weight': {1: 10}, 'coef0': 0.0, 'degree': 1, 'gamma': 0.001, 'kernel': 'poly'}
+
+Matthew Correlation Coefficient / Best parameters:
+0.5089232212143842 {'C': 200, 'class_weight': {1: 5}, 'gamma': 0.001, 'kernel': 'rbf'}
+0.49578612342479716 {'C': 9, 'class_weight': {1: 5}, 'gamma': 0.001, 'kernel': 'sigmoid'}
+0.47725912818763894 {'C': 0.01, 'class_weight': {1: 5}, 'kernel': 'linear'}
+0.5304305569173436 {'C': 10, 'class_weight': {1: 5}, 'coef0': 1.5, 'degree': 5, 'gamma': 0.001, 'kernel': 'poly'}
+
+
+DataSet with LBP
+
+Area under the ROC curve / Best parameters:
+
+First try:
+0.8954298813219976 {'C': 0.01, 'class_weight': {1: 10}, 'gamma': 0.001, 'kernel': 'rbf'}
+0.8904970548124076 {'C': 0.1, 'class_weight': {1: 10}, 'gamma': 0.0001, 'kernel': 'sigmoid'}
+0.866572846240896 {'C': 0.001, 'class_weight': 'balanced', 'kernel': 'linear'}
+0.8969010242869163 {'C': 0.001, 'class_weight': {1: 10}, 'coef0': 0.5, 'degree': 3, 'gamma': 0.001, 'kernel': 'poly'}
