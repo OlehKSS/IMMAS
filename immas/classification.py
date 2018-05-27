@@ -160,16 +160,14 @@ def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THR
 
 def load_features_data (file_path):
     '''
-    Applies Limited Adaptive Histogram Equalization (CLAHE) to an image.
-    Local details are enhanced even in regions that are darker or lighter than most of the image.
+    Loads features dataframe given a file_path and returns two dataframes containing features randomly
+    divided, with all regions of the same image in the same dataset
         
     Args:
-        img (uint8): image file.
-        clip (float): contrast limit (default = 10.0). The pixels above are clipped and distributed uniformly to other bins before applying histogram equalization.        
-        grid (tuple): size of the block (default = (8,8)) of the image where histogram equalization is going to be performed.
+        file_path: string containing path + filename
 
     Returns:
-        (new_img): image obtained after CLAHE application. 
+        data_train, data_test: pandas dataframes
     '''
     
     data = pd.read_csv(file_path, index_col=0)
@@ -276,7 +274,23 @@ def partial_auc_score(fpr, tpr, upper_limit=1):
     return auc(fpr_thresh, tpr_thresh)
 
 def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
+    """
+    Uses the output of the ROC curve to build the FROC curve, correctly scaling the x and y axis
+    Calculates the area under the FROC curve for FPPI between 0 and 1
 
+    Parameters
+    ----------
+    full_prob: numpy array of probabilities
+    false_positive_rate: numpy array of false positive rate (output of ROC curve)
+    true_positive_rate: numpy array of true positive rate (output of ROC curve)
+    full_auc: float; total area under the ROC curve
+
+    Returns
+    -------
+    partial_AUC: float; partial area for FPPI between 0 and 1
+    false_positive_rate: numpy array of false positive per image corrected for FROC curve
+    true_positive_rate: numpy array of true positive rate corrected for FROC curve
+    """
     # Counts to adjust the TPR and to create the False Positive per Image
     unique, counts = np.unique(full_prob[:,-1], return_counts=True)
     num_img = 410
@@ -339,7 +353,7 @@ def geom_feat(kernel):
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
     return svclassifier
 
-def stat_feat(kernel):
+def intens_feat(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -348,27 +362,57 @@ def stat_feat(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier    
+    return svclassifier
+
+def noGLCM_feat(kernel):
+    if kernel == 'rbf':
+        svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
+    elif kernel =='sigmoid':
+        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'linear':
+        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+    else:
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+    return svclassifier
+
+def lbp_feat(kernel):
+    if kernel == 'rbf':
+        svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
+    elif kernel =='sigmoid':
+        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'linear':
+        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+    else:
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+    return svclassifier
 
 def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     """
-    Derive the AUC based of the partial FROC curve from FPPI=0 to FPR=upper_limit threshold.
+    Runs SVM using otpimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
 
     Parameters
     ----------
-    fppi: numpy array of false positive per image.
-    tpr: numpy array of true positive rate.
-    upper_limit: The threshold based on the FPPI to extract the partial FROC based to that value of the threshold.
-
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    
     Returns
     -------
-    AUC of the partial ROC. A value that ranges from 0 to 1.
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    
     """     
     features_dic = {
         'all_except_LBP': all_feat_no_LBP,
         'all_with_LBP': all_LBP,
         'geometrical': geom_feat,
-        'statistical': stat_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
     }
 
     # Get the function from features dictionary
@@ -398,4 +442,4 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     full_auc = auc(false_positive_rate, true_positive_rate)
     partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
 
-    return full_probabilities, full_auc, partial_auc, false_positive_rate, FROC_fpr, FROC_tpr
+    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
