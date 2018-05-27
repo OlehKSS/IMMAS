@@ -30,3 +30,8 @@ First try:
 0.8904970548124076 {'C': 0.1, 'class_weight': {1: 10}, 'gamma': 0.0001, 'kernel': 'sigmoid'}
 0.866572846240896 {'C': 0.001, 'class_weight': 'balanced', 'kernel': 'linear'}
 0.8969010242869163 {'C': 0.001, 'class_weight': {1: 10}, 'coef0': 0.5, 'degree': 3, 'gamma': 0.001, 'kernel': 'poly'}
+
+Two functions:
+- Load dataset (param: filename) - returns two pandas dataframes
+- SVM (param: kernel type; dataset_type (with or without LBP, geometrical, etc...); two arrays (2 datasets))
+-- returns: prints FROC curve; returns partial AUC, full AUC, tpr, fpr
