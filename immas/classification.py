@@ -4,11 +4,13 @@ import pandas as pd
 from . import basic_functions
 from .constants import DICE_INDEX_DEFAULT_THRESHOLD, CLASS_ID_POS, CLASS_ID_NEG
 import bisect
-from sklearn.metrics import auc, classification_report, confusion_matrix, accuracy_score, matthews_corrcoef, roc_curve, make_scorer, roc_auc_score
+from sklearn.metrics import auc, classification_report, confusion_matrix, accuracy_score, matthews_corrcoef, roc_curve, \
+    make_scorer, roc_auc_score
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 
-def dice_similarity(segmented_images,groundtruth_images):
+
+def dice_similarity(segmented_images, groundtruth_images):
     '''
         Performs dice similarity score calculation.
         
@@ -23,15 +25,18 @@ def dice_similarity(segmented_images,groundtruth_images):
     # Settings for one image
     segData = segmented_images + groundtruth_images
     TP_value = np.amax(segmented_images) + np.amax(groundtruth_images)
-    TP = (segData == TP_value).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
+    TP = (
+                segData == TP_value).sum()  # found a true positive: segmentation result and groundtruth match(both are positive)
     segData_FP = 2. * segmented_images + groundtruth_images
     segData_FN = segmented_images + 2. * groundtruth_images
-    FP = (segData_FP == 2 * np.amax(segmented_images)).sum() # found a false positive: segmentation result and groundtruth mismatch
-    FN = (segData_FN == 2 * np.amax(groundtruth_images)).sum() # found a false negative: segmentation result and groundtruth mismatch
-    return 2*TP/(2*TP+FP+FN)  # according to the definition of DICE similarity score
+    FP = (segData_FP == 2 * np.amax(
+        segmented_images)).sum()  # found a false positive: segmentation result and groundtruth mismatch
+    FN = (segData_FN == 2 * np.amax(
+        groundtruth_images)).sum()  # found a false negative: segmentation result and groundtruth mismatch
+    return 2 * TP / (2 * TP + FP + FN)  # according to the definition of DICE similarity score
 
 
-def find_match(m, visual_result = "no"):
+def find_match(m, visual_result="no"):
     '''
         Determines if a mass candidate is a match or not.
         
@@ -54,9 +59,9 @@ def find_match(m, visual_result = "no"):
             cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
             DICE = np.zeros(len(groundtruth_contours))
             for j in range(0, len(groundtruth_contours)):
-                groundtruth_mask = np.zeros(img.image_data.shape, dtype='uint8')
+                groundtruth_mask = np.zeros(m.image_data.shape, dtype='uint8')
                 cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
-                DICE[j] = dice_similarity(segmented_mask,groundtruth_mask)
+                DICE[j] = dice_similarity(segmented_mask, groundtruth_mask)
             if np.amax(DICE) >= DICE_INDEX_DEFAULT_THRESHOLD:
                 num_TP = num_TP + 1
             else:
@@ -67,7 +72,7 @@ def find_match(m, visual_result = "no"):
         for r in m.regions:
             if class_id == CLASS_ID_POS:
                 cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
-        basic_functions.accuracy(segmented_mask,m.cropped_ground_truth,"yes")
+        basic_functions.accuracy(segmented_mask, m.cropped_ground_truth, "yes")
 
     return num_TP, num_FP, num_mass_grd
 
@@ -104,36 +109,36 @@ def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THR
 
     if mask_ground_truth is None:
         # if we don't have a ground truth for the given image we just return all ROIs as FPR
-        _, segmented_contours, _ = cv2.findContours(mask, 
-                                                    cv2.RETR_EXTERNAL, 
+        _, segmented_contours, _ = cv2.findContours(mask,
+                                                    cv2.RETR_EXTERNAL,
                                                     cv2.CHAIN_APPROX_SIMPLE)
-        
+
         for seg_contour in segmented_contours:
             regions_fpr.append({
                 "class_id": id_fpr,
                 "contour": seg_contour,
                 "dice_index": 0})
     else:
-        _, segmented_contours, _ = cv2.findContours(mask, 
-                                                    cv2.RETR_EXTERNAL, 
+        _, segmented_contours, _ = cv2.findContours(mask,
+                                                    cv2.RETR_EXTERNAL,
                                                     cv2.CHAIN_APPROX_SIMPLE)
-        _, groundtruth_contours, _ = cv2.findContours(mask_ground_truth, 
-                                                    cv2.RETR_EXTERNAL, 
-                                                    cv2.CHAIN_APPROX_SIMPLE)
+        _, groundtruth_contours, _ = cv2.findContours(mask_ground_truth,
+                                                      cv2.RETR_EXTERNAL,
+                                                      cv2.CHAIN_APPROX_SIMPLE)
 
-        #let's create a separate mask for each contour from ground truth image
+        # let's create a separate mask for each contour from ground truth image
         gt_masks = []
 
         for contour_gt in groundtruth_contours:
             groundtruth_mask = np.zeros(mask.shape, dtype='uint8')
-            cv2.drawContours(groundtruth_mask, 
-                            [contour_gt], 
-                            -1, 
-                            255, 
-                            thickness=cv2.FILLED)
+            cv2.drawContours(groundtruth_mask,
+                             [contour_gt],
+                             -1,
+                             255,
+                             thickness=cv2.FILLED)
 
             gt_masks.append(groundtruth_mask)
-        
+
         for seg_contour in segmented_contours:
             segmented_mask = np.zeros(mask.shape, dtype='uint8')
             cv2.drawContours(segmented_mask, [seg_contour], -1, 255, thickness=cv2.FILLED)
@@ -143,8 +148,8 @@ def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THR
             for i, gt_mask in enumerate(gt_masks):
                 dice_indices[i] = dice_similarity(segmented_mask, gt_mask)
 
-            max_pos = dice_indices.argmax()   
-            
+            max_pos = dice_indices.argmax()
+
             if dice_indices[max_pos] >= dice_threshold:
                 regions_tpr.append({
                     "class_id": id_tpr,
@@ -154,11 +159,12 @@ def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THR
                 regions_fpr.append({
                     "class_id": id_fpr,
                     "contour": seg_contour,
-                    "dice_index": dice_indices[max_pos]})            
+                    "dice_index": dice_indices[max_pos]})
 
     return regions_tpr, regions_fpr
 
-def load_features_data (file_path):
+
+def load_features_data(file_path):
     '''
     Loads features dataframe given a file_path and returns two dataframes containing features randomly
     divided, with all regions of the same image in the same dataset
@@ -169,7 +175,7 @@ def load_features_data (file_path):
     Returns:
         data_train, data_test: pandas dataframes
     '''
-    
+
     data = pd.read_csv(file_path, index_col=0)
     data_per_imgfile = list(data['img_name'].unique())
     np.random.shuffle(data_per_imgfile)
@@ -190,6 +196,7 @@ def load_features_data (file_path):
 
     return data_train, data_test
 
+
 def line(x_coords, y_coords):
     """
     Given a pair of coordinates (x1,y2), (x2,y2), define the line equation. Note that this is the entire line vs. t
@@ -203,15 +210,16 @@ def line(x_coords, y_coords):
     Returns
     -------
     (Gradient, intercept) tuple pair
-    """    
+    """
     if (x_coords.shape[0] < 2) or (y_coords.shape[0] < 2):
         raise ValueError('At least 2 points are needed to compute'
                          ' area under curve, but x.shape = %s' % p1.shape)
-    if ((x_coords[0]-x_coords[1]) == 0):
+    if ((x_coords[0] - x_coords[1]) == 0):
         raise ValueError("gradient is infinity")
-    gradient = (y_coords[0]-y_coords[1])/(x_coords[0]-x_coords[1])
-    intercept = y_coords[0] - gradient*1.0*x_coords[0]
+    gradient = (y_coords[0] - y_coords[1]) / (x_coords[0] - x_coords[1])
+    intercept = y_coords[0] - gradient * 1.0 * x_coords[0]
     return (gradient, intercept)
+
 
 def x_val_line_intercept(gradient, intercept, x_val):
     """
@@ -228,9 +236,10 @@ def x_val_line_intercept(gradient, intercept, x_val):
     -------
     (x_val, y) corresponding to the intercepted point. Note that this will always return a result.
     There is no check for whether the x_val is within the bounds of the line segment.
-    """    
-    y = gradient*x_val + intercept
+    """
+    y = gradient * x_val + intercept
     return (x_val, y)
+
 
 def get_fpr_tpr_for_thresh(fpr, tpr, thresh):
     """
@@ -246,15 +255,16 @@ def get_fpr_tpr_for_thresh(fpr, tpr, thresh):
     -------
     thresh_fpr: The FPR points that represent the partial ROC to the point of the fpr threshold.
     thresh_tpr: The TPR points that represent the partial ROC to the point of the fpr threshold
-    """    
+    """
     p = bisect.bisect_left(fpr, thresh)
-    thresh_fpr = fpr[:p+1].copy()
-    thresh_tpr = tpr[:p+1].copy()
-    g, i = line(fpr[p-1:p+1], tpr[p-1:p+1])
+    thresh_fpr = fpr[:p + 1].copy()
+    thresh_tpr = tpr[:p + 1].copy()
+    g, i = line(fpr[p - 1:p + 1], tpr[p - 1:p + 1])
     new_point = x_val_line_intercept(g, i, thresh)
     thresh_fpr[p] = new_point[0]
     thresh_tpr[p] = new_point[1]
     return thresh_fpr, thresh_tpr
+
 
 def partial_auc_score(fpr, tpr, upper_limit=1):
     """
@@ -269,11 +279,12 @@ def partial_auc_score(fpr, tpr, upper_limit=1):
     Returns
     -------
     AUC of the partial ROC. A value that ranges from 0 to 1.
-    """        
+    """
     fpr_thresh, tpr_thresh = get_fpr_tpr_for_thresh(fpr, tpr, upper_limit)
     return auc(fpr_thresh, tpr_thresh)
 
-def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
+
+def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc, show_plot="yes"):
     """
     Uses the output of the ROC curve to build the FROC curve, correctly scaling the x and y axis
     Calculates the area under the FROC curve for FPPI between 0 and 1
@@ -284,6 +295,7 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     false_positive_rate: numpy array of false positive rate (output of ROC curve)
     true_positive_rate: numpy array of true positive rate (output of ROC curve)
     full_auc: float; total area under the ROC curve
+    show_plot = choose "yes" or "no" to show the plot
 
     Returns
     -------
@@ -292,10 +304,10 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     true_positive_rate: numpy array of true positive rate corrected for FROC curve
     """
     # Counts to adjust the TPR and to create the False Positive per Image
-    unique, counts = np.unique(full_prob[:,-1], return_counts=True)
+    unique, counts = np.unique(full_prob[:, -1], return_counts=True)
     num_img = 410
     num_pos_img = 115
-    regions = full_prob[:,-1].shape[0]
+    regions = full_prob[:, -1].shape[0]
     pos_reg = counts[1]
     neg_reg = counts[0]
     neg_reg_per_img = neg_reg / num_img
@@ -306,87 +318,101 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     partial_AUC = partial_auc_score(false_positive_rate, true_positive_rate, 1)
 
     # Plots the FROC Curve
-    plt.title('Free Response ROC Curve')
-    plt.plot(false_positive_rate, true_positive_rate, 'b',label='Partial AUC (FPPI = 0:1) = %0.2f'% partial_AUC)
-    plt.legend(loc='lower right')
-    plt.xlim([-0,5])
-    plt.ylim([-0,1])
-    plt.ylabel('True Positive Rate')
-    plt.xlabel('False Positive per Image (FPPI)')
-    plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
-    plt.show()
+    if "yes" == show_plot:
+        plt.title('Free Response ROC Curve')
+        plt.plot(false_positive_rate, true_positive_rate, 'b', label='Partial AUC (FPPI = 0:1) = %0.2f' % partial_AUC)
+        plt.legend(loc='lower right')
+        plt.xlim([-0, 5])
+        plt.ylim([-0, 1])
+        plt.ylabel('True Positive Rate')
+        plt.xlabel('False Positive per Image (FPPI)')
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
+        plt.show()
 
-    print('Area under the original ROC curve for our classifier: %0.2f'% full_auc)
-    print('Partial area under the FROC curve for FPPI between 0 and 1: %0.5f'% partial_AUC)
+    print('Area under the original ROC curve for our classifier: %0.2f' % full_auc)
+    print('Partial area under the FROC curve for FPPI between 0 and 1: %0.5f' % partial_AUC)
     return partial_AUC, false_positive_rate, true_positive_rate
+
 
 def all_feat_no_LBP(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=7, class_weight={1: 15}, gamma=0.001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 20}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0,
+                           probability=True)
     return svclassifier
+
 
 def all_LBP(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=0.01, class_weight={1: 10}, gamma=0.001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=0.1, class_weight={1:10}, gamma=0.0001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=0.1, class_weight={1: 10}, gamma=0.0001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
         svclassifier = SVC(C=0.001, class_weight='balanced', kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5, probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5,
+                           probability=True)
     return svclassifier
+
 
 def geom_feat(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=7, class_weight={1: 15}, gamma=0.001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 20}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0,
+                           probability=True)
     return svclassifier
+
 
 def intens_feat(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=7, class_weight={1: 15}, gamma=0.001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 20}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0,
+                           probability=True)
     return svclassifier
+
 
 def noGLCM_feat(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=7, class_weight={1: 15}, gamma=0.001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 20}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0,
+                           probability=True)
     return svclassifier
+
 
 def lbp_feat(kernel):
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
-    elif kernel =='sigmoid':
-        svclassifier = SVC(C=7, class_weight={1:15}, gamma=0.001, kernel='sigmoid', probability=True)
+    elif kernel == 'sigmoid':
+        svclassifier = SVC(C=7, class_weight={1: 15}, gamma=0.001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 20}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0,
+                           probability=True)
     return svclassifier
 
-def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
+
+def run_SVM(dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     """
     Runs SVM using otpimal parameters according to the features used and the desired kernel
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
@@ -405,7 +431,7 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
     FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
     
-    """     
+    """
     features_dic = {
         'all_except_LBP': all_feat_no_LBP,
         'all_with_LBP': all_LBP,
@@ -420,26 +446,100 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     # Execute the function
     svclassifier = func(kernel)
 
-    dataset01_data = dataset01[:,:-1]
-    dataset01_labels = dataset01[:,-1]
-    dataset02_data = dataset02[:,:-1]
-    dataset02_labels = dataset02[:,-1]
+    dataset01_data = dataset01[:, :-1]
+    dataset01_labels = dataset01[:, -1]
+    dataset02_data = dataset02[:, :-1]
+    dataset02_labels = dataset02[:, -1]
 
     # Trains classifier in DataSet01 and tests in DataSet02
     svclassifier.fit(dataset01_data, dataset01_labels)
     prob1 = svclassifier.predict_proba(dataset02_data)
-    prob1 = np.column_stack((prob1,dataset02_labels))
+    prob1 = np.column_stack((prob1, dataset02_labels))
 
     # Trains classifier in DataSet02 and tests in DataSet01
     svclassifier.fit(dataset02_data, dataset02_labels)
     prob2 = svclassifier.predict_proba(dataset01_data)
-    prob2 = np.column_stack((prob2,dataset01_labels))
+    prob2 = np.column_stack((prob2, dataset01_labels))
 
     # Calculate the probabilities taking both tests into account
-    full_probabilities = np.concatenate((prob1,prob2),axis=0)
+    full_probabilities = np.concatenate((prob1, prob2), axis=0)
 
-    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:, -1], full_probabilities[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
     full_auc = auc(false_positive_rate, true_positive_rate)
     partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
+
+    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
+
+
+def oversampled_run_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf', features='all_except_LBP',
+                        show_plot="yes"):
+    """
+    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    oversampling_kernel: kernel with parameters defined for each oversampling technique
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    show_plot: show the FROC curve "yes" or "no"
+
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+
+    """
+    features_dic = {
+        'all_except_LBP': all_feat_no_LBP,
+        'all_with_LBP': all_LBP,
+        'geometrical': geom_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    # Execute the function
+    svclassifier = func(kernel)
+
+    dataset01_data = dataset01[:, :-1]
+    dataset01_labels = dataset01[:, -1]
+    dataset02_data = dataset02[:, :-1]
+    dataset02_labels = dataset02[:, -1]
+
+    # Trains classifier in DataSet01 and tests in DataSet02
+    dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel.fit_sample(dataset01_data,
+                                                                                          dataset01_labels)
+    svclassifier.fit(dataset01_data_resampled, dataset01_labels_resampled)
+    prob1 = svclassifier.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    # Trains classifier in DataSet02 and tests in DataSet01
+    dataset02_data_resampled, dataset02_labels_resampled = oversampling_kernel.fit_sample(dataset02_data,
+                                                                                          dataset02_labels)
+    svclassifier.fit(dataset02_data_resampled, dataset02_labels_resampled)
+    prob2 = svclassifier.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities = np.concatenate((prob1, prob2), axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:, -1], full_probabilities[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
 
     return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
