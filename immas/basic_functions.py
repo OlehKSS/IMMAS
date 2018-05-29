@@ -221,6 +221,12 @@ def show_pos_neg_regions(img, regions, predictions):
             cv2.drawContours(segmented_mask, [r['contour']], -1, (255, 0, 0), thickness=cv2.FILLED)
         region_num += 1
 
+    num_mass = (predictions == 1.).sum()
+    if num_mass == 0:
+        print("No masses detected")
+    else:
+        print("Number of masses detected is {}".format(num_mass))
+
     plt.figure(figsize=(20, 20))
     plt.subplot(121)
     plt.imshow(segmented_mask, cmap="gray")
