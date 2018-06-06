@@ -1,0 +1,47 @@
+\section{Methods}
+\label{sec:method}
+The proposed system operates in four stages: (1) preprocessing based on morphological enhancement and wavelet transform, (2) mass candidate generation through segmentation, (3) feature extraction, and (4) false positive reduction using support vector machines (SVM) and random forest (RF) classifiers. 
+\subsection{Preprocessing}
+Since masses are embedded in the mammary tissue, preprocessing is necessary to separate them from the surroundings. Different preprocessing methods have been considered in the literature to enhance mass like patterns such as Morphological Enhancement, Wavelet Transforms, and Contrast Limited Adaptive Histogram Equalization (CLAHE). For this work, a combination of these techniques was applied. In a first step, bright areas are added to the image (top hat transform) while subtracting the dark areas (bottom hat transform). As a result, there is an enhancement in the contrast between bright and dark areas. To improve the contrast even more, CLAHE is applied. At the end of the preprocessing step, we perform single level 2D wavelet transform followed by median filtering and reconstruction by inverse wavelet transform.
+
+\subsection{Segmentation}
+Once the image has been enhanced, multithresholding is applied to distinguish between breast tissue, potential masses, and the background, and the image is thresholded using the largest threshold. Through this, mass candidates are found. To improve the segmentation, morphological operations are performed. The morphological parameters are chosen to maximize the Jaccard Index calculated for a segmented mammogram and the corresponding groundtruth image. In later steps, the mass candidate will be classified as positive or negative.
+
+\subsection{Feature Extraction}
+In the third step, mass candidates are described using six different groups of features as stated in Table \ref{tab:features}. A more detailed explanation of the shape, margin, texture and statistical descriptors is provided by Dong \cite{Dong2015}.
+
+The use of Local Binary Patterns (LBP) has been reported as a good method for feature extraction in facial detection. Oliver et al. \cite{Oliver2007} proposed a method for applying LBP for false positive reduction in mass detection, by testing the performance of the LBP descriptor with different parameters for the number of neighbors $P$, the radius $R$ and for different window sizes to divide each ROI (grid size). Berbar et al. \cite{Berbar2012} performed experiments on the effect of varying the grid size in the accuracy of the classifier. Based on their best results an operator was designed with $P=8$, $R=1$, $LBP^{_{8,1}^{riu2}}$ and a $5\times5$ grid size. For each grid, 10 features are obtained, and the total number of features depends on the ROI size. Berbar suggests to use a ROI size of $256\times256$, obtaining 26,010 features, a value that is too high considering the low number of images available in our dataset. It was decided to limit the number of features to 1,000. To accomplish this, a ROI size of $50\times50$ was chosen.  
+
+\begin{table*}[ht]
+\centering
+\caption{List of image descriptors}
+\label{tab:features}
+\begin{tabular}{llll}
+\\ [-1.75ex] \cline{1-2} \\ [-1.75ex]
+\textbf{Category}                                          & \textbf{Features}                                                             &  &  \\ [0.75ex] \cline{1-2} \\ [-1.5ex]
+\textbf{Shape: Geometric}                                  & Perimeter, area, circularity, area/circularity ratio, shapefactor, NCPS       &  &  \\
+\textbf{Shape: NRL}                                        & NRL mean, NRL SD, SD NRL/mean radial length (RL) ratio, NR entropy            &  &  \\
+\textbf{Margin Gradient}                                   & Gradient: mean, SD, skewness                                                  &  &  \\
+\textbf{Texture: Grey Level Histogram}                     & Intensity: mean, standard deviation, smoothness, skewness, kurtosis           &  &  \\
+\textbf{Statistical: Grey Level Co-occurance Matrix}       & Correlation, contrast, uniformity, homogeneity, energy, dissimilarity         &  &  \\
+\textbf{Whole image}                                      & Local Binary Patterns (LBP)                                                   &  &  \\ [0.75ex] \cline{1-2} \\ [-1.75ex]
+\multicolumn{2}{l}{\textit{NRL normalized radial length, NCPS normalized central position shift, RL radial length, SD standard deviation}} &  & 
+\end{tabular}
+\end{table*}
+
+\subsection{Machine Learning}
+In the last step, two classifiers are built: a support vector machine (SVM) and a random forest (RF), to be compared later. First, the dataset is divided randomly into two subsets (train and test) in equal proportions. The division is done so that regions belonging to the same image were assigned to the same subset (training or test). Then, a 2-fold-cross-validation strategy is used.\par
+The classifier is also run under two different conditions: one using all the features and another using all features except LBP to test the effect of the dominating feature, LBP, on the resulting classifier.\par
+
+\subsubsection{Support Vector Machine (SVM)}
+Support vector machines consist of a learning model for classification and regression problems. Given a set of features and their corresponding classes, this classifier builds a hyperplane to separate features related to different classes. The best result is given by the maximum margin hyperplane, named the optimal separating hyperplane (OSH). The linear discriminant function of this OSH is called support vector machine.\par
+The scikit-learn library is used to create and test an SVM classifier. The performance of the classifier is initially evaluated by the area under the ROC curve. This score is used in several grid searches to find the best possible hyperparameters, using different kernels (linear, rbf, sigmoid, polynomial), values of C (penalty to errors), classes weight and values of gamma. The hyperparameters with the best performance are used to build the final classifier.\par
+
+\subsubsection{Random Forest (RF)}
+The random forest classifier creates ensemble of independent decision trees, where every tree is built by random selection of features \cite{Breiman2001}. Each tree is a weak classifier. In the process of classification, the final decision is obtained as a result of the majority vote. This classifier is more robust with respect to noise than other ensemble classifiers.
+
+The random forest classifier implementation is provided by the scikit-learn library. Because the classification of mammogram ROIs is a quite unbalanced problem, class weights were automatically adjusted inversely proportional to class frequencies in the input data \cite{Pedregosa2011}.
+
+
+\subsection{Evaluation method}
+The overall performance of our system is evaluated by a Free Response ROC Curve (FROC curve). This curve plots the correct detection of masses (true positive rate) versus the negative regions considered as masses for the classifier in each image (false positive regions per image - FPPI). The aim is to maximize the area under the FROC curve between 0 and 1 FPPI (partial area under the FROC curve).\par
