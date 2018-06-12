@@ -1,0 +1,10 @@
+\section{Discussion}
+
+As mentioned in the previous section, out of 115 masses in the database, the employed prepossessing and segmentation method correctly identified 110 regions. Therefore, the FROC curve never reaches its full potential as one, instead reaching a maximum of 0.956. When performing segmentation, detection of all positive regions and the increase of false positive regions was found to be a major trade-off. A slightly different approach on the prepossessing stage is anticipated to improve the segmentation in future works. Moreover, post-processing of segmented regions can be applied later.
+
+
+The performance of both SVM and RF classifiers was carefully scrutinized for features obtained with and without LBP. As can be seen in \ref{fig:res_no_lbp}, both classifiers perform similarly (Partial AUC $\approx 0.59$ for RF and $\approx 0.58$ for SVM) on all features with the exception of LBP. But for the set of features including LBP, SVM proved to have a significantly higher performance in comparison to RF even though the Partial AUC was much lower than the previous case (see Figure \ref{fig:res_lbp}) for reasons stated above.
+
+
+Additionally, the limited number of the positive mass images and diagnostic reports posed a great challenge for the classifier, as it created an imbalanced class problem. Consequently, it was difficult to raise the AUC of both classifiers, while overcoming the class imbalance. Although basic classifiers are generally encouraged for such problems, a more complex approach might give improved results. Ideally, obtaining a larger image database with more positive samples is the best way to improve the classification model. 
+

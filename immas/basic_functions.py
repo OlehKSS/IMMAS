@@ -1,5 +1,6 @@
 import cv2,sys,numpy
 import matplotlib.pyplot as plt
+import numpy as np
 
 def show_image_cv(img, window_name):
     '''
@@ -30,6 +31,7 @@ def show_image_plt(img, image_name):
         Returns:
         0
         '''
+    plt.figure(figsize=(10, 10))
     plt.imshow(img, cmap="gray")
     plt.axis('off')
     plt.title(image_name)
@@ -193,3 +195,46 @@ def accuracy(segmented_images, groundtruth_images, visual_results):
 
     return (TP + TN) / N  # according to the definition of Accuracy
 
+
+def show_pos_neg_regions(img, regions, predictions):
+    '''
+        Determines if a mass candidate is a match or not.
+
+        Args:
+        img (Mammogram object): classified image with associated regions
+        regions(string): yes/no to display accuracy for candidates and groundtruth images
+        predictions(array): yes/no to display accuracy for candidates and groundtruth images
+
+        Returns:
+        num_TP (int): number of true positives regions in one image
+        num_FP (int): number of false positives regions in one image
+        num_mass_grd (int): number of masses in the groundtruth
+        '''
+    color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    segmented_mask = np.zeros((img.shape[0], img.shape[1], 3), dtype='uint8')
+    region_num = 0
+    for r in regions:
+        if predictions[region_num] == 1.0:
+            cv2.drawContours(segmented_mask, [r['contour']], -1, (0, 255, 0), thickness=cv2.FILLED)
+            cv2.drawContours(color_img, [r['contour']], -1, (0, 255, 0), 3)
+        elif predictions[region_num] == -1.0:
+            cv2.drawContours(segmented_mask, [r['contour']], -1, (255, 0, 0), thickness=cv2.FILLED)
+        region_num += 1
+
+    num_mass = (predictions == 1.).sum()
+    if num_mass == 0:
+        print("No masses detected")
+    else:
+        print("Number of masses detected is {}".format(num_mass))
+
+    plt.figure(figsize=(20, 20))
+    plt.subplot(121)
+    plt.imshow(segmented_mask, cmap="gray")
+    plt.axis('off')
+    plt.title('Selected contours')
+
+    plt.subplot(122)
+    plt.imshow(color_img, cmap="gray")
+    plt.axis('off')
+    plt.title('Original Image with contours')
+    plt.show()

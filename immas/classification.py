@@ -74,7 +74,7 @@ def find_match(m, visual_result = "no"):
 
 def get_rois(mask, mask_ground_truth=None, dice_threshold=DICE_INDEX_DEFAULT_THRESHOLD):
     '''
-    Function for obtaining regions of interest from the mommogram.
+    Function for obtaining regions of interest from the mammogram.
     It will assign labels for the regions depending on the Dice index. The label for a true
     positive region is 1, for the false positive region is -1.
 
