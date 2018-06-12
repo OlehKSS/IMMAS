@@ -273,7 +273,7 @@ def partial_auc_score(fpr, tpr, upper_limit=1):
     fpr_thresh, tpr_thresh = get_fpr_tpr_for_thresh(fpr, tpr, upper_limit)
     return auc(fpr_thresh, tpr_thresh)
 
-def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
+def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc, show_plot="yes"):
     """
     Uses the output of the ROC curve to build the FROC curve, correctly scaling the x and y axis
     Calculates the area under the FROC curve for FPPI between 0 and 1
@@ -284,6 +284,7 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     false_positive_rate: numpy array of false positive rate (output of ROC curve)
     true_positive_rate: numpy array of true positive rate (output of ROC curve)
     full_auc: float; total area under the ROC curve
+    show_plot = choose "yes" or "no" to show the plot
 
     Returns
     -------
@@ -292,10 +293,10 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     true_positive_rate: numpy array of true positive rate corrected for FROC curve
     """
     # Counts to adjust the TPR and to create the False Positive per Image
-    unique, counts = np.unique(full_prob[:,-1], return_counts=True)
+    unique, counts = np.unique(full_prob[:, -1], return_counts=True)
     num_img = 410
     num_pos_img = 115
-    regions = full_prob[:,-1].shape[0]
+    regions = full_prob[:, -1].shape[0]
     pos_reg = counts[1]
     neg_reg = counts[0]
     neg_reg_per_img = neg_reg / num_img
@@ -306,18 +307,19 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     partial_AUC = partial_auc_score(false_positive_rate, true_positive_rate, 1)
 
     # Plots the FROC Curve
-    plt.title('Free Response ROC Curve')
-    plt.plot(false_positive_rate, true_positive_rate, 'b',label='Partial AUC (FPPI = 0:1) = %0.2f'% partial_AUC)
-    plt.legend(loc='lower right')
-    plt.xlim([-0,5])
-    plt.ylim([-0,1])
-    plt.ylabel('True Positive Rate')
-    plt.xlabel('False Positive per Image (FPPI)')
-    plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
-    plt.show()
+    if "yes" == show_plot:
+        plt.title('Free Response ROC Curve')
+        plt.plot(false_positive_rate, true_positive_rate, 'b', label='Partial AUC (FPPI = 0:1) = %0.2f' % partial_AUC)
+        plt.legend(loc='lower right')
+        plt.xlim([-0, 5])
+        plt.ylim([-0, 1])
+        plt.ylabel('True Positive Rate')
+        plt.xlabel('False Positive per Image (FPPI)')
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
+        plt.show()
 
-    print('Area under the original ROC curve for our classifier: %0.2f'% full_auc)
-    print('Partial area under the FROC curve for FPPI between 0 and 1: %0.5f'% partial_AUC)
+    print('Area under the original ROC curve for our classifier: %0.2f' % full_auc)
+    print('Partial area under the FROC curve for FPPI between 0 and 1: %0.5f' % partial_AUC)
     return partial_AUC, false_positive_rate, true_positive_rate
 
 def all_feat_no_LBP(kernel):
@@ -441,5 +443,77 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
     full_auc = auc(false_positive_rate, true_positive_rate)
     partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
+
+    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
+
+def oversampled_run_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf', features='all_except_LBP',
+                        show_plot="yes"):
+    """
+    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    oversampling_kernel: kernel with parameters defined for each oversampling technique
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    show_plot: show the FROC curve "yes" or "no"
+
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+
+    """
+    features_dic = {
+        'all_except_LBP': all_feat_no_LBP,
+        'all_with_LBP': all_LBP,
+        'geometrical': geom_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    # Execute the function
+    svclassifier = func(kernel)
+
+    dataset01_data = dataset01[:, :-1]
+    dataset01_labels = dataset01[:, -1]
+    dataset02_data = dataset02[:, :-1]
+    dataset02_labels = dataset02[:, -1]
+
+    # Trains classifier in DataSet01 and tests in DataSet02
+    dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel.fit_sample(dataset01_data,
+                                                                                          dataset01_labels)
+    svclassifier.fit(dataset01_data_resampled, dataset01_labels_resampled)
+    prob1 = svclassifier.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    # Trains classifier in DataSet02 and tests in DataSet01
+    dataset02_data_resampled, dataset02_labels_resampled = oversampling_kernel.fit_sample(dataset02_data,
+                                                                                          dataset02_labels)
+    svclassifier.fit(dataset02_data_resampled, dataset02_labels_resampled)
+    prob2 = svclassifier.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities = np.concatenate((prob1, prob2), axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:, -1], full_probabilities[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
 
     return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
