@@ -320,7 +320,10 @@ def ROC_to_FROC(full_prob, false_positive_rate, true_positive_rate, full_auc):
     print('Partial area under the FROC curve for FPPI between 0 and 1: %0.5f'% partial_AUC)
     return partial_AUC, false_positive_rate, true_positive_rate
 
-def all_feat_no_LBP(kernel):
+def all_feat_no_LBP(kernel, dataset01_data, dataset02_data):
+    dataset01_data = dataset01_data[:,0:24]
+    dataset02_data = dataset02_data[:,0:24]
+
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -329,9 +332,12 @@ def all_feat_no_LBP(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
-def all_LBP(kernel):
+def all_LBP(kernel, dataset01_data, dataset02_data):
+    dataset01_data = dataset01_data[:,:-1]
+    dataset02_data = dataset02_data[:,:-1]
+    
     if kernel == 'rbf':
         svclassifier = SVC(C=0.01, class_weight={1: 10}, gamma=0.001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -340,9 +346,12 @@ def all_LBP(kernel):
         svclassifier = SVC(C=0.001, class_weight='balanced', kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
-def geom_feat(kernel):
+def geom_feat(kernel, dataset01_data, dataset02_data):
+    
+    dataset01_data = dataset01_data[:,0:9]
+    dataset02_data = dataset02_data[:,0:9]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -351,9 +360,12 @@ def geom_feat(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
-def intens_feat(kernel):
+def intens_feat(kernel, dataset01_data, dataset02_data):
+    
+    dataset01_data = dataset01_data[:,9:24]
+    dataset02_data = dataset02_data[:,9:24]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -362,9 +374,13 @@ def intens_feat(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
-def noGLCM_feat(kernel):
+def noGLCM_feat(kernel, dataset01_data, dataset02_data):
+    
+    dataset01_data = dataset01_data[:,9:15]
+    dataset02_data = dataset02_data[:,9:15]
+    
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -373,9 +389,13 @@ def noGLCM_feat(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
-def lbp_feat(kernel):
+def lbp_feat(kernel, dataset01_data, dataset02_data):
+    
+    dataset01_data = dataset01_data[:,24:-1]
+    dataset02_data = dataset02_data[:,24:-1]
+    
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -384,7 +404,7 @@ def lbp_feat(kernel):
         svclassifier = SVC(C=0.001, class_weight={1:20}, kernel='linear', probability=True)
     else:
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
-    return svclassifier
+    return svclassifier, dataset01_data, dataset02_data
 
 def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     """
@@ -417,17 +437,20 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
 
     # Get the function from features dictionary
     func = features_dic.get(features)
+    #func, dataset01_data, dataset02_data = features_dic.get(features, dataset01_data, dataset02_data)
     # Execute the function
-    svclassifier = func(kernel)
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
 
-    dataset01_data = dataset01[:,:-1]
+    #dataset01_data = dataset01[:,:-1]
     dataset01_labels = dataset01[:,-1]
-    dataset02_data = dataset02[:,:-1]
+    #dataset02_data = dataset02[:,:-1]
     dataset02_labels = dataset02[:,-1]
 
     # Trains classifier in DataSet01 and tests in DataSet02
     svclassifier.fit(dataset01_data, dataset01_labels)
     prob1 = svclassifier.predict_proba(dataset02_data)
+    print(prob1.shape)
+    print(dataset02.shape)
     prob1 = np.column_stack((prob1,dataset02_labels))
 
     # Trains classifier in DataSet02 and tests in DataSet01
