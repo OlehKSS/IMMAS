@@ -504,12 +504,107 @@ def oversampled_run_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf',
     # Get the function from features dictionary
     func = features_dic.get(features)
     # Execute the function
-    svclassifier = func(kernel)
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
 
-    dataset01_data = dataset01[:, :-1]
-    dataset01_labels = dataset01[:, -1]
-    dataset02_data = dataset02[:, :-1]
-    dataset02_labels = dataset02[:, -1]
+    #dataset01_data = dataset01[:,:-1]
+    dataset01_labels = dataset01[:,-1]
+    #dataset02_data = dataset02[:,:-1]
+    dataset02_labels = dataset02[:,-1]
+
+    # Trains classifier in DataSet01 and tests in DataSet02
+    dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel.fit_sample(dataset01_data,
+                                                                                          dataset01_labels)
+    svclassifier.fit(dataset01_data_resampled, dataset01_labels_resampled)
+    prob1 = svclassifier.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    # Trains classifier in DataSet02 and tests in DataSet01
+    dataset02_data_resampled, dataset02_labels_resampled = oversampling_kernel.fit_sample(dataset02_data,
+                                                                                          dataset02_labels)
+    svclassifier.fit(dataset02_data_resampled, dataset02_labels_resampled)
+    prob2 = svclassifier.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities = np.concatenate((prob1, prob2), axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:, -1], full_probabilities[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
+
+    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
+
+
+def os_all_feat_no_LBP(kernel, dataset01_data, dataset02_data):
+    dataset01_data = dataset01_data[:,0:24]
+    dataset02_data = dataset02_data[:,0:24]
+
+    if kernel == 'rbf':
+        svclassifier = SVC(C=7, class_weight={1: 7}, gamma=0.0003, kernel='rbf', probability=True)
+    elif kernel =='sigmoid':
+        svclassifier = SVC(C=5, class_weight={1:7}, gamma=0.0005, kernel='sigmoid', probability=True)
+    elif kernel == 'linear':
+        svclassifier = SVC(C=0.003, class_weight={1:7}, kernel='linear', probability=True)
+    else:
+        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+    return svclassifier, dataset01_data, dataset02_data
+
+def os_all_LBP(kernel, dataset01_data, dataset02_data):
+    dataset01_data = dataset01_data[:,:-1]
+    dataset02_data = dataset02_data[:,:-1]
+    
+    if kernel == 'rbf':
+        svclassifier = SVC(C=0.01, class_weight={1: 10}, gamma=0.001, kernel='rbf', probability=True)
+    elif kernel =='sigmoid':
+        svclassifier = SVC(C=0.1, class_weight={1:10}, gamma=0.0001, kernel='sigmoid', probability=True)
+    elif kernel == 'linear':
+        svclassifier = SVC(C=0.001, class_weight='balanced', kernel='linear', probability=True)
+    else:
+        svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5, probability=True)
+    return svclassifier, dataset01_data, dataset02_data
+
+def optimal_oversampling_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf', features='all_except_LBP',
+                        show_plot="yes"):
+    """
+    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    oversampling_kernel: kernel with parameters defined for each oversampling technique
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    show_plot: show the FROC curve "yes" or "no"
+
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+
+    """
+    features_dic = {
+        'all_except_LBP': os_all_feat_no_LBP,
+        'all_with_LBP': os_all_LBP,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    # Execute the function
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
+
+    dataset01_labels = dataset01[:,-1]
+    dataset02_labels = dataset02[:,-1]
 
     # Trains classifier in DataSet01 and tests in DataSet02
     dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel.fit_sample(dataset01_data,
