@@ -7,8 +7,6 @@ import bisect
 from sklearn.metrics import auc, classification_report, confusion_matrix, accuracy_score, matthews_corrcoef, roc_curve, make_scorer, roc_auc_score
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
-import imblearn
-from imblearn.over_sampling import SMOTE
 
 def dice_similarity(segmented_images,groundtruth_images):
     '''
@@ -572,7 +570,7 @@ def os_all_LBP(kernel, dataset01_data, dataset02_data):
         svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5, probability=True)
     return svclassifier, dataset01_data, dataset02_data
 
-def optimal_oversampling_SVM(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
+def optimal_oversampling_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf', features='all_except_LBP',
                         show_plot="yes"):
     """
     Runs SVM using optimal parameters according to the features used and the desired kernel
@@ -599,10 +597,6 @@ def optimal_oversampling_SVM(dataset01, dataset02, kernel='rbf', features='all_e
         'all_except_LBP': os_all_feat_no_LBP,
         'all_with_LBP': os_all_LBP,
     }
-
-    if features == 'all_with_LBP':
-        oversampling_kernel = SMOTE(random_state=0,k_neighbors=5, m_neighbors=20,kind = 'borderline2')
-    else: oversampling_kernel = SMOTE(random_state=0,k_neighbors=10, m_neighbors=5,kind = 'svm')
 
     # Get the function from features dictionary
     func = features_dic.get(features)
