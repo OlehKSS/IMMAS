@@ -553,7 +553,7 @@ def os_all_feat_no_LBP(kernel, dataset01_data, dataset02_data):
     elif kernel == 'linear':
         svclassifier = SVC(C=0.003, class_weight={1:7}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1:5}, gamma=0.01, kernel='poly', degree=3, coef0=1.0, probability=True)
     return svclassifier, dataset01_data, dataset02_data
 
 def os_all_LBP(kernel, dataset01_data, dataset02_data):
@@ -561,13 +561,13 @@ def os_all_LBP(kernel, dataset01_data, dataset02_data):
     dataset02_data = dataset02_data[:,:-1]
     
     if kernel == 'rbf':
-        svclassifier = SVC(C=0.01, class_weight={1: 10}, gamma=0.001, kernel='rbf', probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1: 7}, gamma=0.001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
-        svclassifier = SVC(C=0.1, class_weight={1:10}, gamma=0.0001, kernel='sigmoid', probability=True)
+        svclassifier = SVC(C=0.5, class_weight={1:50}, gamma=0.0001, kernel='sigmoid', probability=True)
     elif kernel == 'linear':
-        svclassifier = SVC(C=0.001, class_weight='balanced', kernel='linear', probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 7}, kernel='linear', probability=True)
     else:
-        svclassifier = SVC(C=0.001, class_weight={1: 10}, gamma=0.001, kernel='poly', degree=3, coef0=0.5, probability=True)
+        svclassifier = SVC(C=0.001, class_weight={1: 5}, gamma=0.01, kernel='poly', degree=3, coef0=1.0, probability=True)
     return svclassifier, dataset01_data, dataset02_data
 
 def optimal_oversampling_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf', features='all_except_LBP',
