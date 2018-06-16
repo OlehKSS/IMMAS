@@ -635,3 +635,59 @@ def optimal_oversampling_SVM(dataset01, dataset02, oversampling_kernel, kernel='
                                                       full_auc, "no")
 
     return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
+
+
+def get_roc(test_labels,
+            out_probs,
+            neg_reg_per_img,
+            pos_reg_per_pimg,
+            leg_lbs=None):
+    '''Build several ROC curves on the same plot.
+    
+    Args:
+        test_labels ([np.array]): array of arrays of labels,
+        that were used for classification.
+        out_probs ([np.array]): array of arrays of predicted probabilities.
+        neg_reg_per_img (float): negative regions per image ratio.
+        pos_reg_per_pimg (float): positive regions per positive image ration.
+        leg_lbs ([str]): array of legend labels to be shown on the plot, optional.
+
+    Returns:
+        None.
+    '''
+    
+    if (not isinstance(test_labels, list)) and (not isinstance(test_labels, tuple)):
+        test_labels = (test_labels,)
+    
+    if (not isinstance(out_probs, list)) and (not isinstance(out_probs, tuple)):
+        out_probs = (out_probs,)
+        
+    for i, labels_probs in enumerate(zip(test_labels, out_probs)):
+        test_ls, out_prob = labels_probs
+        fpr, tpr, _ = roc_curve(test_ls, out_prob[:,1], pos_label=1, drop_intermediate=True)
+        #roc_auc = auc(fpr, tpr)
+        
+        fpr = fpr * neg_reg_per_img
+        tpr = tpr * pos_reg_per_pimg
+        
+        # Calculates Partial AUC
+        partial_auc = partial_auc_score(fpr, tpr, 1)
+        
+#         plt.plot(fpr, tpr, label=f'AUC = {roc_auc:.2f}, ROC #{i+1}')
+        if leg_lbs is None:
+            plt.plot(fpr,
+                     tpr,
+                     label=f'Partial AUC (FPPI = 0:1) = {partial_auc:.2f}, ROC #{i+1}')
+        else:
+            plt.plot(fpr,
+                     tpr,
+                     label=f'Partial AUC (FPPI = 0:1) = {partial_auc:.2f}, {leg_lbs[i]}')
+        plt.legend(loc='lower right')
+
+    plt.title('Free Response ROC Curve')
+    plt.xlim([-0,5])
+    plt.ylim([-0,1])
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive per Image (FPPI)')
+    plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
+    plt.show()
