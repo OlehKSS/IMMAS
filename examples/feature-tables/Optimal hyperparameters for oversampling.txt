@@ -1,0 +1,11 @@
+With LBP:
+0.9897472790360184 {'C': 0.5, 'class_weight': {1: 7}, 'gamma': 0.001, 'kernel': 'rbf'}
+0.9072747459413429 {'C': 0.5, 'class_weight': {1: 50}, 'gamma': 0.0001, 'kernel': 'sigmoid'}
+0.8929730686477972 {'C': 0.001, 'class_weight': {1: 7}, 'kernel': 'linear'}
+0.9623059132844874 {'C': 0.001, 'class_weight': {1: 5}, 'coef0': 1.0, 'degree': 3, 'gamma': 0.01, 'kernel': 'poly'}
+
+Without LBP:
+0.9815569090357286 {'C': 5, 'class_weight': 'balanced', 'gamma': 0.0003, 'kernel': 'rbf'}
+0.9816221413607529 {'C': 0.5, 'class_weight': 'balanced', 'gamma': 0.005, 'kernel': 'sigmoid'}
+0.9807574964927842 {'C': 0.001, 'class_weight': None, 'kernel': 'linear'}
+0.9815116698810286 {'C': 0.3, 'class_weight': 'balanced', 'coef0': 1.0, 'degree': 5, 'gamma': 0.001, 'kernel': 'poly'}

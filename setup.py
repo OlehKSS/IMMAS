@@ -14,5 +14,6 @@ setup(
    'scipy',
    'scikit-learn',
    'scikit-image',
-   'pandas'], # external packages as dependencies
+   'pandas',
+   'imbalanced-learn'], # external packages as dependencies
 )

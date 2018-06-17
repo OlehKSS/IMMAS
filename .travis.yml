@@ -4,8 +4,7 @@ cache: pip
 python:
   - 3.6
 sudo: false
-#install:
-#  - pip install flake8 codespell pydocstyle ipyvolume nibabel
-script:
+install:
   - python setup.py install
+script:
   - python -c "import immas"  # just a smoke test for now
