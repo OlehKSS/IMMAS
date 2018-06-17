@@ -7,7 +7,6 @@ import bisect
 from sklearn.metrics import auc, classification_report, confusion_matrix, accuracy_score, matthews_corrcoef, roc_curve, make_scorer, roc_auc_score
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
 
 import imblearn
 from imblearn.over_sampling import RandomOverSampler, SMOTE, ADASYN
@@ -61,7 +60,7 @@ def find_match(m, visual_result = "no"):
             cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
             DICE = np.zeros(len(groundtruth_contours))
             for j in range(0, len(groundtruth_contours)):
-                groundtruth_mask = np.zeros(img.image_data.shape, dtype='uint8')
+                groundtruth_mask = np.zeros(m.image_data.shape, dtype='uint8')
                 cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
                 DICE[j] = dice_similarity(segmented_mask,groundtruth_mask)
             if np.amax(DICE) >= DICE_INDEX_DEFAULT_THRESHOLD:
@@ -359,8 +358,8 @@ def all_LBP(kernel, dataset01_data, dataset02_data):
 
 def geom_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,0:10]
-    dataset02_data = dataset02_data[:,0:10]
+    dataset01_data = dataset01_data[:,0:9]
+    dataset02_data = dataset02_data[:,0:9]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -373,8 +372,8 @@ def geom_feat(kernel, dataset01_data, dataset02_data):
 
 def intens_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,10:24]
-    dataset02_data = dataset02_data[:,10:24]
+    dataset01_data = dataset01_data[:,9:24]
+    dataset02_data = dataset02_data[:,9:24]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -387,8 +386,8 @@ def intens_feat(kernel, dataset01_data, dataset02_data):
 
 def noGLCM_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,10:15]
-    dataset02_data = dataset02_data[:,10:15]
+    dataset01_data = dataset01_data[:,9:15]
+    dataset02_data = dataset02_data[:,9:15]
     
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
@@ -472,13 +471,6 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP', show
     false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
     full_auc = auc(false_positive_rate, true_positive_rate)
 
-<<<<<<< HEAD
-    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
-
-def run_RForest(dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
-    """
-    Runs SVM using otpimal parameters according to the features used and the desired kernel
-=======
     if "yes" == show_plot:
         partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
                                                       full_auc)
@@ -492,37 +484,25 @@ def oversampled_run_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf',
                         show_plot="yes"):
     """
     Runs SVM using optimal parameters according to the features used and the desired kernel
->>>>>>> master
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
     for FPPI between 0 and 1
 
     Parameters
     ----------
     dataset01, dataset01: numpy arrays containing features and labels for each dataset
-<<<<<<< HEAD
-    features: string indicating which features were used. Default: all_except_LBP
-    kernel: desired kernel to use in the SVM. Default: rbf
-    
-=======
     oversampling_kernel: kernel with parameters defined for each oversampling technique
     features: string indicating which features were used. Default: all_except_LBP
     kernel: desired kernel to use in the SVM. Default: rbf
     show_plot: show the FROC curve "yes" or "no"
 
->>>>>>> master
     Returns
     -------
     full_probabilities: numpy array of probabilities
     full_auc: float representing the full area under the ROC curve
     partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
     FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
-<<<<<<< HEAD
-    
-    """     
-=======
 
     """
->>>>>>> master
     features_dic = {
         'all_except_LBP': all_feat_no_LBP,
         'all_with_LBP': all_LBP,
@@ -534,19 +514,6 @@ def oversampled_run_SVM(dataset01, dataset02, oversampling_kernel, kernel='rbf',
 
     # Get the function from features dictionary
     func = features_dic.get(features)
-<<<<<<< HEAD
-    #func, dataset01_data, dataset02_data = features_dic.get(features, dataset01_data, dataset02_data)
-    # Execute the function
-    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
-
-   #dataset01_data = dataset01[:,:-1]
-    dataset01_labels = dataset01[:,-1]
-    #dataset02_data = dataset02[:,:-1]
-    dataset02_labels = dataset02[:,-1]
-    
-
-    clf_opt_train = RandomForestClassifier(n_estimators=1000, #500
-=======
     # Execute the function
     svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
 
@@ -739,24 +706,26 @@ def get_roc(test_labels,
 def optimal_oversampling_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
                         show_plot="yes"):
     """
-    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Runs SVM and RF using optimal parameters according to the features used and the desired kernel
+    Performs re-sampling techniques in the training set for each classifier
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
-    for FPPI between 0 and 1
+    for FPPI between 0 and 1 for both classifiers
+    Returns the probabilities and partial areas using SVM and RF and the correct labels    
 
     Parameters
     ----------
     dataset01, dataset01: numpy arrays containing features and labels for each dataset
-    oversampling_kernel: kernel with parameters defined for each oversampling technique
     features: string indicating which features were used. Default: all_except_LBP
     kernel: desired kernel to use in the SVM. Default: rbf
     show_plot: show the FROC curve "yes" or "no"
 
     Returns
     -------
-    full_probabilities: numpy array of probabilities
-    full_auc: float representing the full area under the ROC curve
-    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
-    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    full_probabilities_SVM: numpy array of probabilities (output of SVM)
+    full_prob_RF: numpy array of probabilities (output of RF)
+    partial_auc_SVM: float representing the partial area under the FROC curve for FPPI between 0 and 1 for SVM
+    partial_auc_RF: float representing the partial area under the FROC curve for FPPI between 0 and 1 for RF
+    labels: labels of the dataset
 
     """
     features_dic = {
@@ -855,29 +824,34 @@ def optimal_oversampling_SVM_RF(dataset01, dataset02, kernel='rbf', features='al
 def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
                         show_plot="yes"):
     """
-    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Runs SVM and RF using optimal parameters according to the features used and the desired kernel
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
-    for FPPI between 0 and 1
+    for FPPI between 0 and 1 for both classifiers
+    Returns the probabilities and partial areas using SVM and RF and the correct labels    
 
     Parameters
     ----------
     dataset01, dataset01: numpy arrays containing features and labels for each dataset
-    oversampling_kernel: kernel with parameters defined for each oversampling technique
     features: string indicating which features were used. Default: all_except_LBP
     kernel: desired kernel to use in the SVM. Default: rbf
     show_plot: show the FROC curve "yes" or "no"
 
     Returns
     -------
-    full_probabilities: numpy array of probabilities
-    full_auc: float representing the full area under the ROC curve
-    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
-    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    full_probabilities_SVM: numpy array of probabilities (output of SVM)
+    full_prob_RF: numpy array of probabilities (output of RF)
+    partial_auc_SVM: float representing the partial area under the FROC curve for FPPI between 0 and 1 for SVM
+    partial_auc_RF: float representing the partial area under the FROC curve for FPPI between 0 and 1 for RF
+    labels: labels of the dataset
 
     """
     features_dic = {
         'all_except_LBP': all_feat_no_LBP,
         'all_with_LBP': all_LBP,
+        'geometrical': geom_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
     }
 
     # Get the function from features dictionary
@@ -915,44 +889,18 @@ def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP'
 
     # Random Forest part
     clf_rs_01 = RandomForestClassifier(n_estimators=1000,
->>>>>>> master
                              max_features='sqrt',
                              min_samples_leaf=50,
                              class_weight='balanced',
                              oob_score=True)
 
-<<<<<<< HEAD
-    clf_opt_test = RandomForestClassifier(n_estimators=1000, #500
-=======
     clf_rs_01.fit(dataset01_data, dataset01_labels)
 
     clf_rs_02 = RandomForestClassifier(n_estimators=1000,
->>>>>>> master
                              max_features='sqrt',
                              min_samples_leaf=50,
                              class_weight='balanced',
                              oob_score=True)
-<<<<<<< HEAD
-    
- 
-    clf_opt_train.fit(dataset01_data, dataset01_labels)
-    prob1 = clf_opt_train.predict_proba(dataset02_data)
-    prob1 = np.column_stack((prob1, dataset02_labels))
-
-    clf_opt_test.fit(dataset02_data, dataset02_labels)
-
-    prob2 = clf_opt_test.predict_proba(dataset01_data)
-    prob2 = np.column_stack((prob2, dataset01_labels))
-
-    # Calculate the probabilities taking both tests into account
-    full_probabilities = np.concatenate((prob1,prob2),axis=0)
-
-    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
-    full_auc = auc(false_positive_rate, true_positive_rate)
-    partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
-
-    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
-=======
 
     clf_rs_02.fit(dataset02_data, dataset02_labels)
 
@@ -976,4 +924,3 @@ def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP'
                                                       full_auc, "no")
 
     return full_probabilities_SVM, full_prob_RF, partial_auc_SVM, partial_auc_RF, labels    
->>>>>>> master
