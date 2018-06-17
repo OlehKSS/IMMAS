@@ -848,6 +848,10 @@ def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP'
     features_dic = {
         'all_except_LBP': all_feat_no_LBP,
         'all_with_LBP': all_LBP,
+        'geometrical': geom_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
     }
 
     # Get the function from features dictionary
