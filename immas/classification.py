@@ -408,7 +408,7 @@ def lbp_feat(kernel, dataset01_data, dataset02_data):
         svclassifier = SVC(C=0.5, class_weight={1: 10}, gamma=0.01, kernel='poly', degree=1, coef0=1.0, probability=True)
     return svclassifier, dataset01_data, dataset02_data
 
-def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
+def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP', show_plot="yes"):
     """
     Runs SVM using otpimal parameters according to the features used and the desired kernel
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
@@ -462,10 +462,15 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
 
     # Calculate the probabilities taking both tests into account
     full_probabilities = np.concatenate((prob1,prob2),axis=0)
-
     false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
     full_auc = auc(false_positive_rate, true_positive_rate)
-    partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
+
+    if "yes" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
 
     return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
 
@@ -639,8 +644,8 @@ def optimal_oversampling_SVM(dataset01, dataset02, oversampling_kernel, kernel='
 
 def get_roc(test_labels,
             out_probs,
-            neg_reg_per_img,
-            pos_reg_per_pimg,
+            neg_reg_per_img=15.2829,
+            pos_reg_per_pimg=0.9565,
             leg_lbs=None):
     '''Build several ROC curves on the same plot.
     
