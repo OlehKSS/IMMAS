@@ -843,8 +843,8 @@ def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP'
 
     """
     features_dic = {
-        'all_except_LBP': os_all_feat_no_LBP,
-        'all_with_LBP': os_all_LBP,
+        'all_except_LBP': all_feat_no_LBP,
+        'all_with_LBP': all_LBP,
     }
 
     # Get the function from features dictionary
@@ -881,23 +881,19 @@ def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP'
 
 
     # Random Forest part
-    clf_rs_01 = RandomForestClassifier(n_estimators=75,
-                                 max_features='sqrt',
-                                 min_samples_leaf=1,
-                                 min_samples_split=2,
-                                 max_depth=5,
-                                 class_weight='balanced',
-                                 oob_score=True)
+    clf_rs_01 = RandomForestClassifier(n_estimators=1000,
+                             max_features='sqrt',
+                             min_samples_leaf=50,
+                             class_weight='balanced',
+                             oob_score=True)
 
     clf_rs_01.fit(dataset01_data, dataset01_labels)
 
-    clf_rs_02 = RandomForestClassifier(n_estimators=75,
-                                 max_features='sqrt',
-                                 min_samples_leaf=1,
-                                 min_samples_split=2,
-                                 max_depth=5,
-                                 class_weight='balanced',
-                                 oob_score=True)
+    clf_rs_02 = RandomForestClassifier(n_estimators=1000,
+                             max_features='sqrt',
+                             min_samples_leaf=50,
+                             class_weight='balanced',
+                             oob_score=True)
 
     clf_rs_02.fit(dataset02_data, dataset02_labels)
 
