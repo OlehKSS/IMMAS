@@ -60,7 +60,7 @@ def find_match(m, visual_result = "no"):
             cv2.drawContours(segmented_mask, [r["countour"]], -1, 255, thickness=cv2.FILLED)
             DICE = np.zeros(len(groundtruth_contours))
             for j in range(0, len(groundtruth_contours)):
-                groundtruth_mask = np.zeros(img.image_data.shape, dtype='uint8')
+                groundtruth_mask = np.zeros(m.image_data.shape, dtype='uint8')
                 cv2.drawContours(groundtruth_mask, [groundtruth_contours[j]], -1, 255, thickness=cv2.FILLED)
                 DICE[j] = dice_similarity(segmented_mask,groundtruth_mask)
             if np.amax(DICE) >= DICE_INDEX_DEFAULT_THRESHOLD:
@@ -706,24 +706,26 @@ def get_roc(test_labels,
 def optimal_oversampling_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
                         show_plot="yes"):
     """
-    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Runs SVM and RF using optimal parameters according to the features used and the desired kernel
+    Performs re-sampling techniques in the training set for each classifier
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
-    for FPPI between 0 and 1
+    for FPPI between 0 and 1 for both classifiers
+    Returns the probabilities and partial areas using SVM and RF and the correct labels    
 
     Parameters
     ----------
     dataset01, dataset01: numpy arrays containing features and labels for each dataset
-    oversampling_kernel: kernel with parameters defined for each oversampling technique
     features: string indicating which features were used. Default: all_except_LBP
     kernel: desired kernel to use in the SVM. Default: rbf
     show_plot: show the FROC curve "yes" or "no"
 
     Returns
     -------
-    full_probabilities: numpy array of probabilities
-    full_auc: float representing the full area under the ROC curve
-    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
-    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    full_probabilities_SVM: numpy array of probabilities (output of SVM)
+    full_prob_RF: numpy array of probabilities (output of RF)
+    partial_auc_SVM: float representing the partial area under the FROC curve for FPPI between 0 and 1 for SVM
+    partial_auc_RF: float representing the partial area under the FROC curve for FPPI between 0 and 1 for RF
+    labels: labels of the dataset
 
     """
     features_dic = {
@@ -822,24 +824,25 @@ def optimal_oversampling_SVM_RF(dataset01, dataset02, kernel='rbf', features='al
 def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
                         show_plot="yes"):
     """
-    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Runs SVM and RF using optimal parameters according to the features used and the desired kernel
     Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
-    for FPPI between 0 and 1
+    for FPPI between 0 and 1 for both classifiers
+    Returns the probabilities and partial areas using SVM and RF and the correct labels    
 
     Parameters
     ----------
     dataset01, dataset01: numpy arrays containing features and labels for each dataset
-    oversampling_kernel: kernel with parameters defined for each oversampling technique
     features: string indicating which features were used. Default: all_except_LBP
     kernel: desired kernel to use in the SVM. Default: rbf
     show_plot: show the FROC curve "yes" or "no"
 
     Returns
     -------
-    full_probabilities: numpy array of probabilities
-    full_auc: float representing the full area under the ROC curve
-    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
-    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    full_probabilities_SVM: numpy array of probabilities (output of SVM)
+    full_prob_RF: numpy array of probabilities (output of RF)
+    partial_auc_SVM: float representing the partial area under the FROC curve for FPPI between 0 and 1 for SVM
+    partial_auc_RF: float representing the partial area under the FROC curve for FPPI between 0 and 1 for RF
+    labels: labels of the dataset
 
     """
     features_dic = {
