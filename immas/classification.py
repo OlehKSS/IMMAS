@@ -8,6 +8,12 @@ from sklearn.metrics import auc, classification_report, confusion_matrix, accura
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 
+import imblearn
+from imblearn.over_sampling import RandomOverSampler, SMOTE, ADASYN
+from imblearn.combine import SMOTETomek
+from sklearn.ensemble import RandomForestClassifier
+
+
 def dice_similarity(segmented_images,groundtruth_images):
     '''
         Performs dice similarity score calculation.
@@ -696,3 +702,222 @@ def get_roc(test_labels,
     plt.xlabel('False Positive per Image (FPPI)')
     plt.grid(color='k', linestyle='dotted', linewidth=0.5, alpha=0.5)
     plt.show()
+
+def optimal_oversampling_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
+                        show_plot="yes"):
+    """
+    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    oversampling_kernel: kernel with parameters defined for each oversampling technique
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    show_plot: show the FROC curve "yes" or "no"
+
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+
+    """
+    features_dic = {
+        'all_except_LBP': os_all_feat_no_LBP,
+        'all_with_LBP': os_all_LBP,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    # Execute the function
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
+
+    dataset01_labels = dataset01[:,-1]
+    dataset02_labels = dataset02[:,-1]
+
+    # Trains classifier in DataSet01 and tests in DataSet02
+    oversampling_kernel_SVM = SMOTE(random_state=0,k_neighbors=10, m_neighbors=5,kind = 'svm')
+    dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel_SVM.fit_sample(dataset01_data,
+                                                                                          dataset01_labels)
+    svclassifier.fit(dataset01_data_resampled, dataset01_labels_resampled)
+    prob1 = svclassifier.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    # Trains classifier in DataSet02 and tests in DataSet01
+    dataset02_data_resampled, dataset02_labels_resampled = oversampling_kernel_SVM.fit_sample(dataset02_data,
+                                                                                          dataset02_labels)
+    svclassifier.fit(dataset02_data_resampled, dataset02_labels_resampled)
+    prob2 = svclassifier.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities_SVM = np.concatenate((prob1, prob2), axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities_SVM[:, -1], full_probabilities_SVM[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc_SVM, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities_SVM, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc_SVM, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities_SVM, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
+
+
+    # Random Forest part
+
+    oversampling_kernel_RF = SMOTETomek(random_state=42,smote = SMOTE(random_state=0, k_neighbors=10, m_neighbors=5, kind='svm'))
+
+    dataset01_data_resampled, dataset01_labels_resampled = oversampling_kernel_RF.fit_sample(dataset01_data,
+                                                                                          dataset01_labels)
+    dataset02_data_resampled, dataset02_labels_resampled = oversampling_kernel_RF.fit_sample(dataset02_data,                                                                                         dataset02_labels)
+
+    clf_rs_01 = RandomForestClassifier(n_estimators=75,
+                                 max_features='sqrt',
+                                 min_samples_leaf=1,
+                                 min_samples_split=2,
+                                 max_depth=5,
+                                 class_weight='balanced',
+                                 oob_score=True)
+
+    clf_rs_01.fit(dataset01_data_resampled, dataset01_labels_resampled)
+
+    clf_rs_02 = RandomForestClassifier(n_estimators=75,
+                                 max_features='sqrt',
+                                 min_samples_leaf=1,
+                                 min_samples_split=2,
+                                 max_depth=5,
+                                 class_weight='balanced',
+                                 oob_score=True)
+
+    clf_rs_02.fit(dataset02_data_resampled, dataset02_labels_resampled)
+
+    prob_aia_01 = clf_rs_01.predict_proba(dataset02_data)
+    prob_aia_02 = clf_rs_02.predict_proba(dataset01_data)
+    prob_aia = np.concatenate((prob_aia_01, prob_aia_02), axis=0)
+    labels = np.concatenate((dataset02_labels, dataset01_labels))
+    full_prob_RF = np.zeros((len(prob_aia),3))
+    full_prob_RF[:,:-1] = prob_aia
+    full_prob_RF[:,-1] = labels
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_prob_RF[:,-1], full_prob_RF[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc_RF, FROC_fpr, FROC_tpr = ROC_to_FROC(full_prob_RF, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc_RF, FROC_fpr, FROC_tpr = ROC_to_FROC(full_prob_RF, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
+
+    return full_probabilities_SVM, full_prob_RF, partial_auc_SVM, partial_auc_RF, labels
+
+
+def optimal_SVM_RF(dataset01, dataset02, kernel='rbf', features='all_except_LBP',
+                        show_plot="yes"):
+    """
+    Runs SVM using optimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    oversampling_kernel: kernel with parameters defined for each oversampling technique
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    show_plot: show the FROC curve "yes" or "no"
+
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+
+    """
+    features_dic = {
+        'all_except_LBP': os_all_feat_no_LBP,
+        'all_with_LBP': os_all_LBP,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    # Execute the function
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
+
+    dataset01_labels = dataset01[:,-1]
+    dataset02_labels = dataset02[:,-1]
+
+    # Trains classifier in DataSet01 and tests in DataSet02
+    svclassifier.fit(dataset01_data, dataset01_labels)
+    prob1 = svclassifier.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    # Trains classifier in DataSet02 and tests in DataSet01
+    svclassifier.fit(dataset02_data, dataset02_labels)
+    prob2 = svclassifier.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities_SVM = np.concatenate((prob1, prob2), axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities_SVM[:, -1], full_probabilities_SVM[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc_SVM, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities_SVM, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc_SVM, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities_SVM, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
+
+
+    # Random Forest part
+    clf_rs_01 = RandomForestClassifier(n_estimators=75,
+                                 max_features='sqrt',
+                                 min_samples_leaf=1,
+                                 min_samples_split=2,
+                                 max_depth=5,
+                                 class_weight='balanced',
+                                 oob_score=True)
+
+    clf_rs_01.fit(dataset01_data, dataset01_labels)
+
+    clf_rs_02 = RandomForestClassifier(n_estimators=75,
+                                 max_features='sqrt',
+                                 min_samples_leaf=1,
+                                 min_samples_split=2,
+                                 max_depth=5,
+                                 class_weight='balanced',
+                                 oob_score=True)
+
+    clf_rs_02.fit(dataset02_data, dataset02_labels)
+
+    prob_aia_01 = clf_rs_01.predict_proba(dataset02_data)
+    prob_aia_02 = clf_rs_02.predict_proba(dataset01_data)
+    prob_aia = np.concatenate((prob_aia_01, prob_aia_02), axis=0)
+    labels = np.concatenate((dataset02_labels, dataset01_labels))
+    full_prob_RF = np.zeros((len(prob_aia),3))
+    full_prob_RF[:,:-1] = prob_aia
+    full_prob_RF[:,-1] = labels
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_prob_RF[:,-1], full_prob_RF[:, 1],
+                                                                    pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+
+    if "yes" == show_plot:
+        partial_auc_RF, FROC_fpr, FROC_tpr = ROC_to_FROC(full_prob_RF, false_positive_rate, true_positive_rate,
+                                                      full_auc)
+    elif "no" == show_plot:
+        partial_auc_RF, FROC_fpr, FROC_tpr = ROC_to_FROC(full_prob_RF, false_positive_rate, true_positive_rate,
+                                                      full_auc, "no")
+
+    return full_probabilities_SVM, full_prob_RF, partial_auc_SVM, partial_auc_RF, labels    
