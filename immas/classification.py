@@ -7,6 +7,7 @@ import bisect
 from sklearn.metrics import auc, classification_report, confusion_matrix, accuracy_score, matthews_corrcoef, roc_curve, make_scorer, roc_auc_score
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
 
 def dice_similarity(segmented_images,groundtruth_images):
     '''
@@ -350,8 +351,8 @@ def all_LBP(kernel, dataset01_data, dataset02_data):
 
 def geom_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,0:9]
-    dataset02_data = dataset02_data[:,0:9]
+    dataset01_data = dataset01_data[:,0:10]
+    dataset02_data = dataset02_data[:,0:10]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -364,8 +365,8 @@ def geom_feat(kernel, dataset01_data, dataset02_data):
 
 def intens_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,9:24]
-    dataset02_data = dataset02_data[:,9:24]
+    dataset01_data = dataset01_data[:,10:24]
+    dataset02_data = dataset02_data[:,10:24]
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
     elif kernel =='sigmoid':
@@ -378,8 +379,8 @@ def intens_feat(kernel, dataset01_data, dataset02_data):
 
 def noGLCM_feat(kernel, dataset01_data, dataset02_data):
     
-    dataset01_data = dataset01_data[:,9:15]
-    dataset02_data = dataset02_data[:,9:15]
+    dataset01_data = dataset01_data[:,10:15]
+    dataset02_data = dataset02_data[:,10:15]
     
     if kernel == 'rbf':
         svclassifier = SVC(C=10, class_weight={1: 20}, gamma=0.0001, kernel='rbf', probability=True)
@@ -457,6 +458,78 @@ def run_SVM (dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
     svclassifier.fit(dataset02_data, dataset02_labels)
     prob2 = svclassifier.predict_proba(dataset01_data)
     prob2 = np.column_stack((prob2,dataset01_labels))
+
+    # Calculate the probabilities taking both tests into account
+    full_probabilities = np.concatenate((prob1,prob2),axis=0)
+
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(full_probabilities[:,-1], full_probabilities[:,1], pos_label=1, drop_intermediate=True)
+    full_auc = auc(false_positive_rate, true_positive_rate)
+    partial_auc, FROC_fpr, FROC_tpr = ROC_to_FROC(full_probabilities, false_positive_rate, true_positive_rate, full_auc)
+
+    return full_probabilities, full_auc, partial_auc, FROC_fpr, FROC_tpr
+
+def run_RForest(dataset01, dataset02, kernel='rbf', features='all_except_LBP'):
+    """
+    Runs SVM using otpimal parameters according to the features used and the desired kernel
+    Prints the FROC curve, the area under the ROC curve and the partial area under the FROC curve
+    for FPPI between 0 and 1
+
+    Parameters
+    ----------
+    dataset01, dataset01: numpy arrays containing features and labels for each dataset
+    features: string indicating which features were used. Default: all_except_LBP
+    kernel: desired kernel to use in the SVM. Default: rbf
+    
+    Returns
+    -------
+    full_probabilities: numpy array of probabilities
+    full_auc: float representing the full area under the ROC curve
+    partial_auc: float representing the partial area under the FROC curve for FPPI between 0 and 1
+    FROC_fpr, FROC_tpr: false positive per image and true positive rate numpy arrays corrected for the FROC curve
+    
+    """     
+    features_dic = {
+        'all_except_LBP': all_feat_no_LBP,
+        'all_with_LBP': all_LBP,
+        'geometrical': geom_feat,
+        'intensity': intens_feat,
+        'intensity_no_GLCM': noGLCM_feat,
+        'lbp': lbp_feat,
+    }
+
+    # Get the function from features dictionary
+    func = features_dic.get(features)
+    #func, dataset01_data, dataset02_data = features_dic.get(features, dataset01_data, dataset02_data)
+    # Execute the function
+    svclassifier,dataset01_data, dataset02_data = func(kernel, dataset01, dataset02)
+
+   #dataset01_data = dataset01[:,:-1]
+    dataset01_labels = dataset01[:,-1]
+    #dataset02_data = dataset02[:,:-1]
+    dataset02_labels = dataset02[:,-1]
+    
+
+    clf_opt_train = RandomForestClassifier(n_estimators=1000, #500
+                             max_features='sqrt',
+                             min_samples_leaf=50,
+                             class_weight='balanced',
+                             oob_score=True)
+
+    clf_opt_test = RandomForestClassifier(n_estimators=1000, #500
+                             max_features='sqrt',
+                             min_samples_leaf=50,
+                             class_weight='balanced',
+                             oob_score=True)
+    
+ 
+    clf_opt_train.fit(dataset01_data, dataset01_labels)
+    prob1 = clf_opt_train.predict_proba(dataset02_data)
+    prob1 = np.column_stack((prob1, dataset02_labels))
+
+    clf_opt_test.fit(dataset02_data, dataset02_labels)
+
+    prob2 = clf_opt_test.predict_proba(dataset01_data)
+    prob2 = np.column_stack((prob2, dataset01_labels))
 
     # Calculate the probabilities taking both tests into account
     full_probabilities = np.concatenate((prob1,prob2),axis=0)
